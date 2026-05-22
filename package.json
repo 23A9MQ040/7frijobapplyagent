@@ -1,0 +1,25 @@
+{
+  "name": "7frijobapplyagent",
+  "version": "1.0.0",
+  "description": "AI-powered autonomous job application SaaS platform",
+  "main": "backend/main.py",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && python -m uvicorn main:app --reload --port 8000",
+    "build": "npm run build:frontend && npm run build:backend",
+    "build:frontend": "cd frontend && npm run build",
+    "build:backend": "cd backend && pip install -r requirements.txt",
+    "start": "cd frontend && npm start",
+    "deploy": "npm run build && vercel deploy",
+    "test": "concurrently \"npm run test:frontend\" \"npm run test:backend\"",
+    "test:frontend": "cd frontend && npm test",
+    "test:backend": "cd backend && pytest"
+  },
+  "keywords": ["ai", "jobs", "automation", "resume", "saas"],
+  "author": "7FRIJOBAPPLYAGENT",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.0.0"
+  }
+}
