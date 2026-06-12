@@ -43,6 +43,7 @@ export default function SettingsPage() {
   const { settings, updateSetting } = useAppContext();
   const [section, setSection] = useState('Profile');
   const [saved, setSaved] = useState(false);
+  const [testingApi, setTestingApi] = useState(false);
 
   const toggle = (key: keyof typeof settings) => updateSetting(key, !settings[key]);
 
@@ -50,6 +51,36 @@ export default function SettingsPage() {
     setSaved(true);
     showToast('Settings saved successfully', 'success');
     setTimeout(() => setSaved(false), 2500);
+  };
+
+  const handleTestApi = async () => {
+    if (!settings.geminiApiKey) {
+      showToast('Please enter an API key first.', 'error');
+      return;
+    }
+    setTestingApi(true);
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${settings.geminiApiKey}`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: "Respond with the exact word 'OK'." }] }],
+          generationConfig: { temperature: 0.1 }
+        }),
+      });
+      if (response.ok) {
+        showToast('API Connection Successful!', 'success');
+      } else {
+        const err = await response.text();
+        console.error("API Test Error:", err);
+        showToast('API Connection Failed. Check your key.', 'error');
+      }
+    } catch (e) {
+      showToast('API Connection Failed. Network error.', 'error');
+    } finally {
+      setTestingApi(false);
+    }
   };
 
   return (
@@ -136,13 +167,22 @@ export default function SettingsPage() {
                   <div style={{ fontSize: '15px', fontWeight: 700, color: '#f0f0ff', marginBottom: '20px' }}>Agent Configuration</div>
                   <div style={{ marginBottom: '20px' }}>
                     <div style={{ fontSize: '11px', color: '#4a5568', letterSpacing: '0.06em', marginBottom: '6px' }}>GEMINI API KEY (REQUIRED FOR AI JOB SEARCH)</div>
-                    <input 
-                      type="password"
-                      value={settings.geminiApiKey} 
-                      onChange={(e) => updateSetting('geminiApiKey', e.target.value)}
-                      placeholder="AIzaSy..."
-                      style={{ width: '100%', padding: '10px 14px', background: 'rgba(0,212,255,0.04)', border: '1px solid rgba(0,212,255,0.2)', borderRadius: '10px', color: '#00d4ff', fontSize: '13px', outline: 'none', transition: 'border-color 0.2s ease' }}
-                    />
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <input 
+                        type="password"
+                        value={settings.geminiApiKey} 
+                        onChange={(e) => updateSetting('geminiApiKey', e.target.value)}
+                        placeholder="AIzaSy..."
+                        style={{ flex: 1, padding: '10px 14px', background: 'rgba(0,212,255,0.04)', border: '1px solid rgba(0,212,255,0.2)', borderRadius: '10px', color: '#00d4ff', fontSize: '13px', outline: 'none', transition: 'border-color 0.2s ease' }}
+                      />
+                      <button 
+                        onClick={handleTestApi} 
+                        disabled={testingApi}
+                        style={{ padding: '0 16px', borderRadius: '10px', background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.3)', color: '#00d4ff', fontSize: '13px', fontWeight: 600, cursor: testingApi ? 'wait' : 'pointer', transition: 'all 0.2s' }}
+                      >
+                        {testingApi ? 'Testing...' : 'Test Connection'}
+                      </button>
+                    </div>
                     <div style={{ fontSize: '10px', color: '#ef4444', marginTop: '6px' }}>* Required to enable real-time job generation simulation on the Dashboard.</div>
                   </div>
 
