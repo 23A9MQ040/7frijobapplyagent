@@ -15,6 +15,7 @@ type Settings = {
   fullName: string;
   targetRole: string;
   location: string;
+  resumeText: string;
 };
 
 export type Application = {
@@ -50,6 +51,7 @@ const defaultSettings: Settings = {
   fullName: 'Sumanth',
   targetRole: 'ML / AI Engineer',
   location: 'Bangalore, India',
+  resumeText: '',
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);

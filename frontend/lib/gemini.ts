@@ -54,3 +54,63 @@ export async function generateJobsFromGemini(apiKey: string, role: string, locat
     throw new Error('Failed to parse the job data from Gemini API.');
   }
 }
+
+export async function analyzeResumeWithGemini(apiKey: string, resumeText: string, targetRole: string) {
+  if (!apiKey) throw new Error('No Gemini API key provided.');
+
+  const prompt = `Act as an Expert Technical Recruiter. Analyze this resume for the target role: "${targetRole}".
+  
+  Resume Text:
+  """
+  ${resumeText}
+  """
+
+  Return ONLY a valid JSON object with the exact following schema, nothing else:
+  {
+    "matchScore": 85, // number 0-100
+    "strengths": ["Strength 1", "Strength 2"], // array of 2-3 strings
+    "missingKeywords": ["Keyword 1", "Keyword 2"], // array of 2-4 strings
+    "rewrites": [
+      {
+        "original": "Did some python coding for data",
+        "improved": "Engineered scalable Python data pipelines processing 10GB+ daily, improving query performance by 40%."
+      }
+    ] // array of 1-2 rewrite objects
+  }
+  Do not wrap the JSON in markdown code blocks, return raw JSON string.`;
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: {
+        temperature: 0.2, // lower temp for more analytical response
+        responseMimeType: "application/json",
+      }
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('Gemini API Error:', errorText);
+    throw new Error('Failed to analyze resume with Gemini API.');
+  }
+
+  const data = await response.json();
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  
+  if (!text) {
+    throw new Error('Invalid response structure from Gemini API.');
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    console.error('Failed to parse Gemini JSON:', text);
+    throw new Error('Failed to parse the resume analysis from Gemini API.');
+  }
+}
+
