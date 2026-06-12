@@ -1,18 +1,21 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Users, Mail, Phone, Linkedin, Star, MessageSquare, Clock, Search, Plus, CheckCircle2 } from 'lucide-react';
+import { Users, Mail, Phone, Linkedin, Star, MessageSquare, Clock, Search, Plus, CheckCircle2, Copy, Zap, Loader2 } from 'lucide-react';
 import Header from '@/components/common/Header';
 import Sidebar from '@/components/common/Sidebar';
 import { useToast } from '../../ToastContext';
+import { useAppContext } from '../../AppContext';
+import { generateOutreachMessage } from '../../../lib/gemini';
 
-const recruiters = [
-  { id: 1, name: 'Sarah Mitchell', company: 'Google', title: 'Senior Technical Recruiter', email: 'sarah.m@google.com', status: 'active', lastContact: '2 days ago', notes: 'Interested in ML roles. Follow up after interview.', rating: 5, logo: 'G', logoColor: 'linear-gradient(135deg,#4285f4,#0f9d58)' },
-  { id: 2, name: 'James Ko', company: 'Anthropic', title: 'Talent Acquisition Lead', email: 'james.ko@anthropic.com', status: 'waiting', lastContact: '5 days ago', notes: 'Sent resume. Waiting for screening call.', rating: 4, logo: 'A', logoColor: 'linear-gradient(135deg,#cc785c,#a85c3a)' },
-  { id: 3, name: 'Priya Rao', company: 'Microsoft', title: 'AI Division Recruiter', email: 'priya.r@microsoft.com', status: 'active', lastContact: '1 week ago', notes: 'Offer extended! Need to respond by Jun 20.', rating: 5, logo: 'Ms', logoColor: 'linear-gradient(135deg,#00a4ef,#7fba00)' },
-  { id: 4, name: 'Tom Walsh', company: 'DeepMind', title: 'Research Recruiter', email: 'tom.w@deepmind.com', status: 'new', lastContact: 'Today', notes: 'First contact via LinkedIn. Schedule phone screen.', rating: 3, logo: 'D', logoColor: 'linear-gradient(135deg,#4285f4,#0f9d58)' },
-  { id: 5, name: 'Elena Cruz', company: 'OpenAI', title: 'Engineering Recruiter', email: 'elena.c@openai.com', status: 'cold', lastContact: '3 weeks ago', notes: 'No response after 3 follow-ups. Low priority.', rating: 2, logo: 'O', logoColor: 'linear-gradient(135deg,#10a37f,#1a7f64)' },
-];
+const fallbackLogoColors: Record<string, string> = {
+  G: 'linear-gradient(135deg,#4285f4,#0f9d58)',
+  O: 'linear-gradient(135deg,#10a37f,#1a7f64)',
+  A: 'linear-gradient(135deg,#cc785c,#a85c3a)',
+  M: 'linear-gradient(135deg,#1877f2,#0d5dbf)',
+  Ms: 'linear-gradient(135deg,#00a4ef,#7fba00)',
+  D: 'linear-gradient(135deg,#4285f4,#0f9d58)',
+};
 
 const statusConfig: Record<string, { label: string; color: string; bg: string; border: string }> = {
   active:   { label: 'Active',   color: '#10b981', bg: 'rgba(16,185,129,0.1)', border: 'rgba(16,185,129,0.25)' },
@@ -23,14 +26,50 @@ const statusConfig: Record<string, { label: string; color: string; bg: string; b
 
 export default function RecruitersPage() {
   const { showToast } = useToast();
+  const { settings, applications } = useAppContext();
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<number | null>(null);
+  const [drafting, setDrafting] = useState(false);
+  const [drafts, setDrafts] = useState<Record<number, { subject: string, body: string }>>({});
 
-  const filtered = recruiters.filter(r =>
-    r.name.toLowerCase().includes(search.toLowerCase()) ||
-    r.company.toLowerCase().includes(search.toLowerCase())
+  // Use unique companies from applications list
+  const uniqueApps = applications.filter((app, index, self) =>
+    index === self.findIndex((t) => t.company === app.company)
   );
-  const detail = selected ? recruiters.find(r => r.id === selected) : null;
+
+  const filtered = uniqueApps.filter(a =>
+    a.company.toLowerCase().includes(search.toLowerCase()) ||
+    a.role.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const detail = selected ? uniqueApps.find(a => a.id === selected) : null;
+
+  const handleDraftMessage = async () => {
+    if (!detail) return;
+    if (!settings.geminiApiKey) {
+      showToast('Please add your Gemini API Key in Settings first!', 'error');
+      return;
+    }
+    if (!settings.resumeText || settings.resumeText.length < 50) {
+      showToast('Please paste a longer resume text in the Resume page first!', 'error');
+      return;
+    }
+    setDrafting(true);
+    try {
+      const res = await generateOutreachMessage(settings.geminiApiKey, settings.resumeText, settings.targetRole, detail.company, detail.role);
+      setDrafts(prev => ({ ...prev, [detail.id]: res }));
+      showToast('AI Draft generated successfully!', 'success');
+    } catch (e: any) {
+      showToast(e.message || 'Failed to draft message.', 'error');
+    } finally {
+      setDrafting(false);
+    }
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    showToast('Copied to clipboard!', 'success');
+  };
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#050510' }}>
@@ -42,9 +81,9 @@ export default function RecruitersPage() {
           <div style={{ marginBottom: '24px' }} className="animate-fade-up">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
               <div>
-                <h1 style={{ fontSize: '24px', fontWeight: 800, color: '#f0f0ff', letterSpacing: '-0.02em', marginBottom: '4px' }}>Recruiters</h1>
+                <h1 style={{ fontSize: '24px', fontWeight: 800, color: '#f0f0ff', letterSpacing: '-0.02em', marginBottom: '4px' }}>AI Outreach Generator</h1>
                 <p style={{ color: '#8892b0', fontSize: '14px' }}>
-                  <span style={{ color: '#10b981', fontWeight: 600 }}>{recruiters.filter(r => r.status === 'active').length} active</span> contacts in your network
+                  Select a company to generate an <span style={{ color: '#a855f7', fontWeight: 600 }}>AI Cold Outreach</span> email based on your resume.
                 </p>
               </div>
               <button onClick={() => showToast('Add Recruiter modal opening...', 'info')} style={{
@@ -70,8 +109,8 @@ export default function RecruitersPage() {
               </div>
 
               {filtered.map((r, i) => {
-                const s = statusConfig[r.status];
                 const isSelected = selected === r.id;
+                const logoColor = fallbackLogoColors[r.logo] || 'linear-gradient(135deg,#7c3aed,#00d4ff)';
                 return (
                   <div key={r.id}
                     className={`animate-fade-up delay-${Math.min(i * 100 + 100, 400)}`}
@@ -87,59 +126,79 @@ export default function RecruitersPage() {
                     onMouseEnter={e => { if (!isSelected) { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(0,212,255,0.2)'; (e.currentTarget as HTMLElement).style.background = 'rgba(0,212,255,0.03)'; } }}
                     onMouseLeave={e => { if (!isSelected) { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(124,58,237,0.12)'; (e.currentTarget as HTMLElement).style.background = 'rgba(10,10,30,0.6)'; } }}
                   >
-                    <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: r.logoColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 800, color: '#fff', flexShrink: 0 }}>{r.logo}</div>
+                    <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: logoColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 800, color: '#fff', flexShrink: 0 }}>{r.logo}</div>
 
                     <div style={{ flex: 1, minWidth: '150px' }}>
-                      <div style={{ fontSize: '14px', fontWeight: 700, color: '#f0f0ff' }}>{r.name}</div>
-                      <div style={{ fontSize: '12px', color: '#8892b0', marginTop: '2px' }}>{r.title} · {r.company}</div>
+                      <div style={{ fontSize: '14px', fontWeight: 700, color: '#f0f0ff' }}>{r.company}</div>
+                      <div style={{ fontSize: '12px', color: '#8892b0', marginTop: '2px' }}>Role: {r.role}</div>
                     </div>
 
                     <div style={{ fontSize: '11px', color: '#4a5568', display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
-                      <Clock size={10} /> {r.lastContact}
+                      <Clock size={10} /> {r.date}
                     </div>
 
-                    {/* Stars */}
-                    <div style={{ display: 'flex', gap: '2px', flexShrink: 0 }}>
-                      {[1,2,3,4,5].map(n => (
-                        <Star key={n} size={12} style={{ color: n <= r.rating ? '#f59e0b' : '#1e293b', fill: n <= r.rating ? '#f59e0b' : 'none' }} />
-                      ))}
-                    </div>
-
-                    <span style={{ padding: '3px 10px', borderRadius: '9999px', fontSize: '10px', fontWeight: 600, background: s.bg, border: `1px solid ${s.border}`, color: s.color, flexShrink: 0 }}>{s.label}</span>
-
-                    <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
-                      <button onClick={e => { e.stopPropagation(); showToast(`Opening email draft for ${r.name}`, 'info'); }} style={{ padding: '6px 10px', borderRadius: '7px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', background: 'rgba(0,212,255,0.08)', border: '1px solid rgba(0,212,255,0.2)', color: '#00d4ff', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <Mail size={11} /> Email
-                      </button>
-                      <button onClick={e => { e.stopPropagation(); showToast(`Generating follow-up message for ${r.name}...`, 'success'); }} style={{ padding: '6px 10px', borderRadius: '7px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.2)', color: '#a855f7', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <MessageSquare size={11} /> Follow Up
-                      </button>
-                    </div>
+                    <span style={{ padding: '3px 10px', borderRadius: '9999px', fontSize: '10px', fontWeight: 600, background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.25)', color: '#00d4ff', flexShrink: 0 }}>
+                      Match: {r.matchScore}%
+                    </span>
                   </div>
                 );
               })}
             </div>
 
-            {/* Detail panel */}
+            {/* Detail / Generator panel */}
             {detail && (
               <div className="animate-fade-up" style={{ background: 'rgba(10,10,30,0.6)', backdropFilter: 'blur(20px)', border: '1px solid rgba(0,212,255,0.2)', borderRadius: '16px', padding: '20px', position: 'sticky', top: '16px', maxHeight: 'calc(100vh - 120px)', overflowY: 'auto' }}>
                 <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-                  <div style={{ width: '60px', height: '60px', borderRadius: '16px', background: detail.logoColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', fontWeight: 800, color: '#fff', margin: '0 auto 12px', boxShadow: '0 0 20px rgba(0,212,255,0.2)' }}>{detail.logo}</div>
-                  <div style={{ fontSize: '16px', fontWeight: 700, color: '#f0f0ff' }}>{detail.name}</div>
-                  <div style={{ fontSize: '12px', color: '#8892b0', marginTop: '3px' }}>{detail.title}</div>
-                  <div style={{ fontSize: '12px', color: '#a855f7', marginTop: '1px' }}>{detail.company}</div>
+                  <div style={{ width: '60px', height: '60px', borderRadius: '16px', background: fallbackLogoColors[detail.logo] || 'linear-gradient(135deg,#7c3aed,#00d4ff)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', fontWeight: 800, color: '#fff', margin: '0 auto 12px', boxShadow: '0 0 20px rgba(0,212,255,0.2)' }}>{detail.logo}</div>
+                  <div style={{ fontSize: '16px', fontWeight: 700, color: '#f0f0ff' }}>{detail.company}</div>
+                  <div style={{ fontSize: '12px', color: '#8892b0', marginTop: '3px' }}>Target: {detail.role}</div>
                 </div>
-                <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
-                  {[{ icon: <Mail size={13} />, label: 'Email', color: '#00d4ff' }, { icon: <Linkedin size={13} />, label: 'LinkedIn', color: '#a855f7' }, { icon: <Phone size={13} />, label: 'Call', color: '#10b981' }].map(b => (
-                    <button key={b.label} onClick={() => showToast(`Executing ${b.label} action for ${detail.name}...`, 'success')} style={{ flex: 1, padding: '8px', borderRadius: '9px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: b.color, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', transition: 'all 0.2s' }}>
-                      {b.icon} {b.label}
+
+                {!drafts[detail.id] ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', background: 'rgba(0,212,255,0.02)', borderRadius: '12px', border: '1px dashed rgba(0,212,255,0.2)', textAlign: 'center', gap: '16px' }}>
+                    <div style={{ color: '#8892b0', fontSize: '13px', lineHeight: 1.6 }}>Generate a highly personalized cold outreach email for this specific role at {detail.company}, tailored to your resume strengths.</div>
+                    <button onClick={handleDraftMessage} disabled={drafting} style={{
+                      display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '10px',
+                      background: 'linear-gradient(135deg, #00d4ff, #7c3aed)', color: '#fff', fontSize: '13px', fontWeight: 600,
+                      cursor: drafting ? 'wait' : 'pointer', border: 'none', boxShadow: '0 4px 14px rgba(124,58,237,0.3)', opacity: drafting ? 0.7 : 1
+                    }}>
+                      {drafting ? <Loader2 size={16} className="animate-spin" /> : <Zap size={16} />}
+                      {drafting ? 'Drafting...' : 'Generate AI Outreach'}
                     </button>
-                  ))}
-                </div>
-                <div style={{ fontSize: '10px', color: '#4a5568', letterSpacing: '0.06em', marginBottom: '8px' }}>CONTACT</div>
-                <div style={{ fontSize: '12px', color: '#8892b0', marginBottom: '16px', padding: '10px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>{detail.email}</div>
-                <div style={{ fontSize: '10px', color: '#4a5568', letterSpacing: '0.06em', marginBottom: '8px' }}>NOTES</div>
-                <div style={{ fontSize: '12px', color: '#c0c8d8', padding: '10px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', lineHeight: 1.6 }}>{detail.notes}</div>
+                  </div>
+                ) : (
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <div style={{ fontSize: '11px', color: '#4a5568', letterSpacing: '0.06em' }}>SUBJECT LINE</div>
+                      <button onClick={() => copyToClipboard(drafts[detail.id].subject)} style={{ background: 'none', border: 'none', color: '#00d4ff', cursor: 'pointer', padding: '4px' }}><Copy size={13} /></button>
+                    </div>
+                    <div style={{ fontSize: '13px', color: '#f0f0ff', fontWeight: 600, marginBottom: '20px', padding: '10px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                      {drafts[detail.id].subject}
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <div style={{ fontSize: '11px', color: '#4a5568', letterSpacing: '0.06em' }}>EMAIL BODY</div>
+                      <button onClick={() => copyToClipboard(drafts[detail.id].body)} style={{ background: 'none', border: 'none', color: '#a855f7', cursor: 'pointer', padding: '4px' }}><Copy size={13} /></button>
+                    </div>
+                    <textarea 
+                      readOnly 
+                      value={drafts[detail.id].body}
+                      style={{ width: '100%', height: '240px', fontSize: '12px', color: '#c0c8d8', padding: '12px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', lineHeight: 1.6, resize: 'none', outline: 'none' }}
+                    />
+                    
+                    <button onClick={handleDraftMessage} disabled={drafting} style={{
+                      marginTop: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', width: '100%',
+                      padding: '10px', borderRadius: '10px', background: 'rgba(255,255,255,0.04)', color: '#8892b0', fontSize: '12px', fontWeight: 600,
+                      cursor: drafting ? 'wait' : 'pointer', border: '1px solid rgba(255,255,255,0.08)', transition: 'all 0.2s', opacity: drafting ? 0.7 : 1
+                    }}
+                    onMouseEnter={e => { if(!drafting) {(e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.08)'; (e.currentTarget as HTMLElement).style.color = '#f0f0ff';} }}
+                    onMouseLeave={e => { if(!drafting) {(e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; (e.currentTarget as HTMLElement).style.color = '#8892b0';} }}
+                    >
+                      {drafting ? <Loader2 size={14} className="animate-spin" /> : <Zap size={14} />}
+                      Regenerate Variant
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>

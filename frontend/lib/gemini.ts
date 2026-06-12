@@ -114,3 +114,62 @@ export async function analyzeResumeWithGemini(apiKey: string, resumeText: string
   }
 }
 
+export async function generateOutreachMessage(apiKey: string, resumeText: string, targetRole: string, company: string, jobRole: string) {
+  if (!apiKey) throw new Error('No Gemini API key provided.');
+
+  const prompt = `Act as an expert career coach and copywriter. Draft a short, highly persuasive cold outreach email to a recruiter at "${company}" for the role of "${jobRole}".
+  
+  Use this candidate's resume to highlight 1-2 specific achievements that make them a perfect fit:
+  """
+  ${resumeText}
+  """
+
+  The email should:
+  1. Have a catchy subject line.
+  2. Be no more than 150 words.
+  3. Be professional, confident, and slightly enthusiastic.
+  4. End with a clear call to action for a quick chat.
+
+  Return ONLY a valid JSON object with the exact following schema, nothing else:
+  {
+    "subject": "The email subject line",
+    "body": "The full email body including greeting and sign-off. Use \n for line breaks."
+  }
+  Do not wrap the JSON in markdown code blocks, return raw JSON string.`;
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: {
+        temperature: 0.7,
+        responseMimeType: "application/json",
+      }
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('Gemini API Error:', errorText);
+    throw new Error('Failed to generate outreach message with Gemini API.');
+  }
+
+  const data = await response.json();
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  
+  if (!text) {
+    throw new Error('Invalid response structure from Gemini API.');
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    console.error('Failed to parse Gemini JSON:', text);
+    throw new Error('Failed to parse outreach message from Gemini API.');
+  }
+}
+
+
