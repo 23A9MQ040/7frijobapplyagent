@@ -16,7 +16,7 @@ export async function generateJobsFromGemini(apiKey: string, role: string, locat
   ]
   Do not wrap the JSON in markdown code blocks, return raw JSON string.`;
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey.trim()}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey.trim()}`;
 
   const response = await fetch(url, {
     method: 'POST',
@@ -84,7 +84,7 @@ export async function analyzeResumeWithGemini(apiKey: string, resumeText: string
   }
   Do not wrap the JSON in markdown code blocks, return raw JSON string.`;
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey.trim()}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey.trim()}`;
 
   const response = await fetch(url, {
     method: 'POST',
@@ -147,7 +147,7 @@ export async function generateOutreachMessage(apiKey: string, resumeText: string
   }
   Do not wrap the JSON in markdown code blocks, return raw JSON string.`;
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey.trim()}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey.trim()}`;
 
   const response = await fetch(url, {
     method: 'POST',
