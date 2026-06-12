@@ -7,27 +7,45 @@ on:
 jobs:
   deploy-frontend:
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v3
-      
-      - name: Deploy to Vercel
-        uses: vercel/action@master
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
         with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          working-directory: ./frontend
-          scope: ${{ secrets.VERCEL_ORG_ID }}
+          node-version: '18'
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+
+      - name: Deploy to Vercel
+        run: |
+          cd frontend
+          npm install
+          vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+          vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+          vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
   deploy-backend:
     runs-on: ubuntu-latest
-    
+    if: ${{ secrets.RENDER_DEPLOY_HOOK != '' }}
+
     steps:
       - uses: actions/checkout@v3
-      
-      - name: Deploy to Render (or your backend hosting)
+
+      - name: Deploy to Render
         run: |
-          curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }} \
-            -H "Content-Type: application/json" \
-            -d '{"action": "deploy"}'
+          if [ -n "$RENDER_DEPLOY_HOOK" ]; then
+            curl -X POST "$RENDER_DEPLOY_HOOK" \
+              -H "Content-Type: application/json" \
+              -d '{"action": "deploy"}'
+            echo "Backend deploy triggered successfully"
+          else
+            echo "No RENDER_DEPLOY_HOOK set, skipping backend deploy"
+          fi
+        env:
+          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}

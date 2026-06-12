@@ -10,40 +10,16 @@ pyjwt>=2.8.0,<3.0.0
 bcrypt>=4.1.1,<5.0.0
 httpx>=0.25.2,<0.26.0
 openai>=1.3.0,<2.0.0
-uvicorn==0.24.0
-python-dotenv==1.0.0
-sqlalchemy>=2.0.23,<3.0.0
-alembic>=1.13.0,<2.0.0
-# psycopg2-binary==2.9.9
-redis>=5.0.0,<6.0.0
-pydantic>=2.5.0,<3.0.0
-pydantic-settings>=2.1.0,<3.0.0
-pyjwt>=2.8.0,<3.0.0
-bcrypt>=4.1.1,<5.0.0
-httpx>=0.25.2,<0.26.0
-openai>=1.3.0,<2.0.0
-
-uvicorn==0.24.0
-python-dotenv==1.0.0
-sqlalchemy>=2.0.23,<3.0.0
-alembic>=1.13.0,<2.0.0
-# psycopg2-binary==2.9.9
-redis>=5.0.0,<6.0.0
-pydantic>=2.5.0,<3.0.0
-pydantic-settings>=2.1.0,<3.0.0
-pyjwt>=2.8.0,<3.0.0
-bcrypt>=4.1.1,<5.0.0
-httpx>=0.25.2,<0.26.0
-openai>=1.3.0,<2.0.0
-# anthropic==0.7.11,<0.8.0
 langchain>=0.1.0,<0.2.0
-pinecone-client==2.2.4
-chromadb==0.4.18
-playwright==1.40.0
 beautifulsoup4==4.12.2
 requests==2.31.0
 celery==5.3.4
 python-multipart==0.0.6
 email-validator==2.1.0
 orjson==3.9.10
-corsheaders==4.3.1
+# psycopg2-binary - requires pg_config, use in production with proper tooling
+# anthropic - version not available on PyPI yet
+# pinecone-client==2.2.4 - version not available, use pinecone>=3.0.0
+# chromadb==0.4.18 - requires onnxruntime, skip for now
+# playwright==1.40.0 - large dependency, skip for CI
+# corsheaders==4.3.1 - not a standalone package, included in django-cors-headers

@@ -1,18 +1,17 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  swcMinify: true,
+  // Static export for GitHub Pages deployment
+  output: 'export',
+  // Set base path for GitHub Pages (repo name)
+  basePath: process.env.NODE_ENV === 'production' ? '/7frijobapplyagent' : '',
+  assetPrefix: process.env.NODE_ENV === 'production' ? '/7frijobapplyagent/' : '',
+  trailingSlash: true,
+  images: {
+    unoptimized: true, // Required for static export
+  },
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000',
-  },
-  async redirects() {
-    return [
-      {
-        source: '/',
-        destination: '/dashboard',
-        permanent: true,
-      },
-    ];
   },
   async headers() {
     return [
