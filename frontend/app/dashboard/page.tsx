@@ -9,6 +9,7 @@ import {
 import Header from '@/components/common/Header';
 import Sidebar from '@/components/common/Sidebar';
 import { useToast } from '../ToastContext';
+import { useAppContext } from '../AppContext';
 
 const initialStats = [
   { label: 'Jobs Found', value: 1247, icon: Briefcase, trend: '+12.5%', color: '#00d4ff', glow: 'rgba(0,212,255,0.3)', bg: 'rgba(0,212,255,0.08)', border: 'rgba(0,212,255,0.2)' },
@@ -59,8 +60,14 @@ const companyColors: Record<string, string> = {
 
 export default function Dashboard() {
   const { showToast } = useToast();
-  const [agentRunning, setAgentRunning] = useState(true);
+  const { settings, updateSetting } = useAppContext();
+  const [agentRunning, setAgentRunning] = useState(settings.autoApply);
   const [mounted, setMounted] = useState(false);
+
+  // Sync with global settings
+  useEffect(() => {
+    setAgentRunning(settings.autoApply);
+  }, [settings.autoApply]);
   
   const [stats, setStats] = useState(initialStats);
   const [activity, setActivity] = useState(initialActivity);
@@ -102,6 +109,7 @@ export default function Dashboard() {
   const handlePauseToggle = () => {
     const newState = !agentRunning;
     setAgentRunning(newState);
+    updateSetting('autoApply', newState);
     if (newState) {
       showToast('Agent resumed. Scanning for new opportunities...', 'success');
     } else {
@@ -121,7 +129,7 @@ export default function Dashboard() {
             position: 'relative', overflow: 'hidden',
             background: 'linear-gradient(135deg, rgba(0,212,255,0.1) 0%, rgba(124,58,237,0.15) 50%, rgba(236,72,153,0.08) 100%)',
             border: '1px solid rgba(124,58,237,0.25)', borderRadius: '18px', padding: '28px 32px', marginBottom: '24px',
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '20px',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '20px', flexWrap: 'wrap'
           }} className="animate-fade-up">
             
             <div style={{ position: 'absolute', top: '-40px', right: '80px', width: '200px', height: '200px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(0,212,255,0.12) 0%, transparent 70%)', pointerEvents: 'none' }} />
@@ -182,7 +190,12 @@ export default function Dashboard() {
             })}
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px' }} className="dash-grid">
+            <style>{`
+              @media (min-width: 1024px) {
+                .dash-grid { grid-template-columns: 1fr 340px !important; }
+              }
+            `}</style>
             {/* Applications Table */}
             <div style={{ background: 'rgba(10,10,30,0.6)', backdropFilter: 'blur(20px)', border: '1px solid rgba(124,58,237,0.15)', borderRadius: '16px', overflow: 'hidden' }} className="animate-fade-up delay-200">
               <div style={{ padding: '18px 20px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

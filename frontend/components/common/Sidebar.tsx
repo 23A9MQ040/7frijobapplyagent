@@ -13,7 +13,9 @@ import {
   LogOut,
   Zap,
   ChevronRight,
+  X,
 } from 'lucide-react';
+import { useAppContext } from '@/app/AppContext';
 
 const navItems = [
   { label: 'Dashboard',    icon: LayoutDashboard, href: '/dashboard' },
@@ -27,42 +29,70 @@ const navItems = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const { mobileMenuOpen, setMobileMenuOpen } = useAppContext();
   const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  const sidebarWidth = '240px';
 
   return (
+    <>
+    {isMobile && mobileMenuOpen && (
+      <div 
+        onClick={() => setMobileMenuOpen(false)}
+        style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', zIndex: 90 }} 
+      />
+    )}
     <aside style={{
-      width: '240px',
+      width: sidebarWidth,
       minHeight: '100vh',
       background: 'linear-gradient(180deg, rgba(5,5,20,0.98) 0%, rgba(10,5,30,0.98) 100%)',
       borderRight: '1px solid rgba(124,58,237,0.2)',
       display: 'flex',
       flexDirection: 'column',
-      position: 'sticky',
+      position: isMobile ? 'fixed' : 'sticky',
       top: 0,
+      left: isMobile ? (mobileMenuOpen ? 0 : '-100%') : 0,
       backdropFilter: 'blur(20px)',
+      zIndex: 100,
+      transition: 'left 0.3s ease',
     }}>
       {/* Brand */}
       <div style={{ padding: '24px 20px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          {/* Logo orb */}
-          <div style={{
-            width: '36px', height: '36px',
-            background: 'linear-gradient(135deg, #00d4ff, #7c3aed)',
-            borderRadius: '10px',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontWeight: 800, fontSize: '14px', color: '#fff',
-            boxShadow: '0 0 15px rgba(0,212,255,0.4)',
-            flexShrink: 0,
-          }}>7F</div>
-          <div>
-            <div style={{ fontWeight: 700, fontSize: '14px', color: '#f0f0ff', letterSpacing: '0.01em' }}>
-              JobApply
-            </div>
-            <div style={{ fontSize: '10px', color: '#00d4ff', letterSpacing: '0.1em', fontWeight: 500 }}>
-              AI AGENT
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            {/* Logo orb */}
+            <div style={{
+              width: '36px', height: '36px',
+              background: 'linear-gradient(135deg, #00d4ff, #7c3aed)',
+              borderRadius: '10px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontWeight: 800, fontSize: '14px', color: '#fff',
+              boxShadow: '0 0 15px rgba(0,212,255,0.4)',
+              flexShrink: 0,
+            }}>7F</div>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: '14px', color: '#f0f0ff', letterSpacing: '0.01em' }}>
+                JobApply
+              </div>
+              <div style={{ fontSize: '10px', color: '#00d4ff', letterSpacing: '0.1em', fontWeight: 500 }}>
+                AI AGENT
+              </div>
             </div>
           </div>
+          {isMobile && (
+            <button onClick={() => setMobileMenuOpen(false)} style={{ background: 'none', border: 'none', color: '#8892b0', cursor: 'pointer' }}>
+              <X size={20} />
+            </button>
+          )}
         </div>
 
         {/* Live status pill */}
@@ -139,13 +169,13 @@ export default function Sidebar() {
               )}
               <Icon size={16} style={{ flexShrink: 0 }} />
               <span style={{ flex: 1 }}>{item.label}</span>
-              {isActive && <ChevronRight size={12} style={{ opacity: 0.5 }} />}
-            </Link>
-          );
-        })}
-      </nav>
+                {isActive && <ChevronRight size={12} style={{ opacity: 0.5 }} />}
+              </Link>
+            );
+          })}
+        </nav>
 
-      {/* Footer */}
+        {/* Footer */}
       <div style={{ padding: '12px 10px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
         {/* Quick stats */}
         <div style={{
@@ -187,5 +217,6 @@ export default function Sidebar() {
         </button>
       </div>
     </aside>
+    </>
   );
 }

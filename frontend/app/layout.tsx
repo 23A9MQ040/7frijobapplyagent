@@ -7,6 +7,7 @@ export const metadata: Metadata = {
 };
 
 import { ToastProvider } from './ToastContext';
+import { AppProvider } from './AppContext';
 
 export default function RootLayout({
   children,
@@ -16,9 +17,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <ToastProvider>
-          {children}
-        </ToastProvider>
+        <AppProvider>
+          <ToastProvider>
+            {children}
+          </ToastProvider>
+        </AppProvider>
       </body>
     </html>
   );

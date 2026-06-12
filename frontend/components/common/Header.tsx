@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Bell, Settings, Search, Github, Globe, Phone, Mail, LogOut, ChevronDown, ExternalLink, Copy, CheckCheck, Linkedin, CheckCircle2 } from 'lucide-react';
+import { Bell, Settings, Search, Github, Globe, Phone, Mail, LogOut, ChevronDown, ExternalLink, Copy, CheckCheck, Linkedin, CheckCircle2, Menu } from 'lucide-react';
 import { useToast } from '@/app/ToastContext';
+import { useAppContext } from '@/app/AppContext';
 
 export default function Header() {
   const [time, setTime] = useState('');
@@ -12,6 +13,8 @@ export default function Header() {
   const profileRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
   const { showToast } = useToast();
+  const { mobileMenuOpen, setMobileMenuOpen } = useAppContext();
+  const [isMobile, setIsMobile] = useState(false);
   const [notifications, setNotifications] = useState([
     { id: 1, text: 'Google responded to your application', time: '2m ago', color: '#10b981', read: false },
     { id: 2, text: 'New job match: OpenAI ML Researcher', time: '15m ago', color: '#00d4ff', read: false },
@@ -22,6 +25,10 @@ export default function Header() {
 
   // Live clock
   useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+
     const tick = () => {
       const now = new Date();
       setTime(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
@@ -59,6 +66,14 @@ export default function Header() {
       position: 'sticky', top: 0, zIndex: 50,
       gap: '16px',
     }}>
+      {isMobile && (
+        <button 
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          style={{ background: 'none', border: 'none', color: '#f0f0ff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        >
+          <Menu size={24} />
+        </button>
+      )}
 
       {/* Search bar */}
       <div style={{

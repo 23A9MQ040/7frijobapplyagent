@@ -5,6 +5,7 @@ import { User, Bell, Shield, Zap, Globe, Key, Save, ToggleLeft, ToggleRight, Che
 import Header from '@/components/common/Header';
 import Sidebar from '@/components/common/Sidebar';
 import { useToast } from '../../ToastContext';
+import { useAppContext } from '../../AppContext';
 
 const sections = ['Profile', 'Agent Config', 'Notifications', 'Security', 'Integrations'];
 
@@ -39,15 +40,11 @@ const SettingRow = ({ label, desc, children }: { label: string; desc?: string; c
 
 export default function SettingsPage() {
   const { showToast } = useToast();
+  const { settings, updateSetting } = useAppContext();
   const [section, setSection] = useState('Profile');
-  const [toggles, setToggles] = useState({
-    autoApply: true, emailNotif: true, jobAlerts: true,
-    twoFactor: false, weeklyReport: true, aiOptimize: true,
-    darkMode: true, remoteOnly: false,
-  });
   const [saved, setSaved] = useState(false);
 
-  const toggle = (key: keyof typeof toggles) => setToggles(t => ({ ...t, [key]: !t[key] }));
+  const toggle = (key: keyof typeof settings) => updateSetting(key, !settings[key]);
 
   const handleSave = () => {
     setSaved(true);
@@ -67,7 +64,12 @@ export default function SettingsPage() {
             <p style={{ color: '#8892b0', fontSize: '14px' }}>Manage your account and agent preferences</p>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }} className="settings-grid">
+            <style>{`
+              @media (min-width: 768px) {
+                .settings-grid { grid-template-columns: 200px 1fr !important; }
+              }
+            `}</style>
 
             {/* Nav */}
             <div className="animate-fade-up delay-100" style={{ background: 'rgba(10,10,30,0.6)', backdropFilter: 'blur(20px)', border: '1px solid rgba(124,58,237,0.15)', borderRadius: '14px', padding: '10px', height: 'fit-content' }}>
@@ -129,13 +131,13 @@ export default function SettingsPage() {
                 <>
                   <div style={{ fontSize: '15px', fontWeight: 700, color: '#f0f0ff', marginBottom: '20px' }}>Agent Configuration</div>
                   <SettingRow label="Auto-Apply Mode" desc="AI automatically submits applications to matched jobs">
-                    <Toggle on={toggles.autoApply} onToggle={() => toggle('autoApply')} />
+                    <Toggle on={settings.autoApply} onToggle={() => toggle('autoApply')} />
                   </SettingRow>
                   <SettingRow label="AI Resume Optimization" desc="Tailor resume content for each job description">
-                    <Toggle on={toggles.aiOptimize} onToggle={() => toggle('aiOptimize')} />
+                    <Toggle on={settings.aiOptimize} onToggle={() => toggle('aiOptimize')} />
                   </SettingRow>
                   <SettingRow label="Remote-Only Filter" desc="Only apply to fully remote positions">
-                    <Toggle on={toggles.remoteOnly} onToggle={() => toggle('remoteOnly')} />
+                    <Toggle on={settings.remoteOnly} onToggle={() => toggle('remoteOnly')} />
                   </SettingRow>
                   <div style={{ marginTop: '20px' }}>
                     <div style={{ fontSize: '11px', color: '#4a5568', letterSpacing: '0.06em', marginBottom: '6px' }}>MIN MATCH SCORE THRESHOLD</div>
@@ -155,13 +157,13 @@ export default function SettingsPage() {
                 <>
                   <div style={{ fontSize: '15px', fontWeight: 700, color: '#f0f0ff', marginBottom: '20px' }}>Notification Preferences</div>
                   <SettingRow label="Email Notifications" desc="Receive updates via email">
-                    <Toggle on={toggles.emailNotif} onToggle={() => toggle('emailNotif')} />
+                    <Toggle on={settings.emailNotif} onToggle={() => toggle('emailNotif')} />
                   </SettingRow>
                   <SettingRow label="Job Match Alerts" desc="Notify when high-match jobs are found">
-                    <Toggle on={toggles.jobAlerts} onToggle={() => toggle('jobAlerts')} />
+                    <Toggle on={settings.jobAlerts} onToggle={() => toggle('jobAlerts')} />
                   </SettingRow>
                   <SettingRow label="Weekly Performance Report" desc="Summary of agent activity every Monday">
-                    <Toggle on={toggles.weeklyReport} onToggle={() => toggle('weeklyReport')} />
+                    <Toggle on={settings.weeklyReport} onToggle={() => toggle('weeklyReport')} />
                   </SettingRow>
                 </>
               )}
@@ -170,7 +172,7 @@ export default function SettingsPage() {
                 <>
                   <div style={{ fontSize: '15px', fontWeight: 700, color: '#f0f0ff', marginBottom: '20px' }}>Security</div>
                   <SettingRow label="Two-Factor Authentication" desc="Add an extra layer of security to your account">
-                    <Toggle on={toggles.twoFactor} onToggle={() => toggle('twoFactor')} />
+                    <Toggle on={settings.twoFactor} onToggle={() => toggle('twoFactor')} />
                   </SettingRow>
                   <div style={{ marginTop: '20px' }}>
                     <div style={{ fontSize: '11px', color: '#4a5568', letterSpacing: '0.06em', marginBottom: '10px' }}>CHANGE PASSWORD</div>
