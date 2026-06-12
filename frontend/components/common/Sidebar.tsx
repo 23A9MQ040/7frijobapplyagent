@@ -215,6 +215,16 @@ export default function Sidebar() {
           <LogOut size={16} />
           Logout
         </button>
+
+        <div style={{
+          textAlign: 'center',
+          marginTop: '12px',
+          fontSize: '10px',
+          color: '#4a5568',
+          letterSpacing: '0.05em',
+        }}>
+          &copy; Copyright by potturi chitti raju
+        </div>
       </div>
     </aside>
     </>
