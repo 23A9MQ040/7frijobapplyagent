@@ -5,7 +5,10 @@ import { Bell, Settings, Search, Github, Globe, Phone, Mail, LogOut, ChevronDown
 import { useToast } from '@/app/ToastContext';
 import { useAppContext } from '@/app/AppContext';
 
+import { usePathname, useRouter } from 'next/navigation';
+
 export default function Header() {
+  const router = useRouter();
   const [time, setTime] = useState('');
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -158,7 +161,7 @@ export default function Header() {
       </div>
 
       {/* Settings */}
-      <button onClick={() => showToast('Opening Settings panel...', 'info')} style={{ width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '10px', color: '#8892b0', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', transition: 'all 0.2s ease' }}
+      <button onClick={() => router.push('/dashboard/settings')} style={{ width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '10px', color: '#8892b0', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', transition: 'all 0.2s ease' }}
         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#a855f7'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(168,85,247,0.3)'; (e.currentTarget as HTMLElement).style.transform = 'rotate(30deg)'; }}
         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#8892b0'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.08)'; (e.currentTarget as HTMLElement).style.transform = 'rotate(0deg)'; }}>
         <Settings size={16} />
@@ -352,7 +355,10 @@ export default function Header() {
             {/* Footer actions */}
             <div style={{ padding: '10px 12px 12px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
               <button 
-                onClick={() => showToast('Signing out...', 'info')}
+                onClick={() => {
+                  showToast('Signing out...', 'info');
+                  setTimeout(() => router.push('/'), 1000);
+                }}
                 style={{
                 width: '100%', padding: '9px', borderRadius: '10px',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',

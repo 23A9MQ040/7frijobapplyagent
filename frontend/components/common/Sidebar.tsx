@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
   Briefcase,
@@ -16,6 +16,7 @@ import {
   X,
 } from 'lucide-react';
 import { useAppContext } from '@/app/AppContext';
+import { useToast } from '@/app/ToastContext';
 
 const navItems = [
   { label: 'Dashboard',    icon: LayoutDashboard, href: '/dashboard' },
@@ -29,6 +30,8 @@ const navItems = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { showToast } = useToast();
   const { mobileMenuOpen, setMobileMenuOpen } = useAppContext();
   const [mounted, setMounted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -194,7 +197,12 @@ export default function Sidebar() {
           ))}
         </div>
 
-        <button style={{
+        <button 
+        onClick={() => {
+          showToast('Signing out...', 'info');
+          setTimeout(() => router.push('/'), 1000);
+        }}
+        style={{
           display: 'flex', alignItems: 'center', gap: '8px',
           width: '100%', padding: '10px 12px',
           borderRadius: '10px',
