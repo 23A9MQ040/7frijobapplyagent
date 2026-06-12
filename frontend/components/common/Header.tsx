@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Bell, Settings, Search, Github, Globe, Phone, Mail, LogOut, ChevronDown, ExternalLink, Copy, CheckCheck } from 'lucide-react';
+import { Bell, Settings, Search, Github, Globe, Phone, Mail, LogOut, ChevronDown, ExternalLink, Copy, CheckCheck, Linkedin } from 'lucide-react';
 
 export default function Header() {
   const [time, setTime] = useState('');
@@ -190,6 +190,32 @@ export default function Header() {
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: '13px', fontWeight: 600, color: '#f0f0ff' }}>GitHub</div>
                   <div style={{ fontSize: '10px', color: '#4a5568' }}>github.com/23A9MQ040</div>
+                </div>
+                <ExternalLink size={12} style={{ color: '#4a5568' }} />
+              </a>
+
+              {/* LinkedIn */}
+              <a
+                href="https://www.linkedin.com/in/sai-varma"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '10px',
+                  padding: '10px 12px', borderRadius: '10px',
+                  background: 'rgba(255,255,255,0.03)',
+                  border: '1px solid rgba(255,255,255,0.06)',
+                  marginBottom: '6px', textDecoration: 'none',
+                  transition: 'all 0.2s ease', cursor: 'pointer',
+                }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(10,102,194,0.1)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(10,102,194,0.3)'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.06)'; }}
+              >
+                <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(10,102,194,0.1)', border: '1px solid rgba(10,102,194,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Linkedin size={16} style={{ color: '#0a66c2' }} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: '13px', fontWeight: 600, color: '#f0f0ff' }}>LinkedIn</div>
+                  <div style={{ fontSize: '10px', color: '#4a5568' }}>Connect on LinkedIn</div>
                 </div>
                 <ExternalLink size={12} style={{ color: '#4a5568' }} />
               </a>

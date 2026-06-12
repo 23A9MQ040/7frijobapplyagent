@@ -202,6 +202,7 @@ export default function LandingPage() {
           <a href="#" style={{ color: '#4a5568', fontSize: '13px', textDecoration: 'none', fontWeight: 500 }}>Privacy Policy</a>
           <a href="#" style={{ color: '#4a5568', fontSize: '13px', textDecoration: 'none', fontWeight: 500 }}>Terms of Service</a>
           <a href="https://github.com/23A9MQ040" style={{ color: '#4a5568', fontSize: '13px', textDecoration: 'none', fontWeight: 500 }}>GitHub</a>
+          <a href="https://www.linkedin.com/in/sai-varma" style={{ color: '#4a5568', fontSize: '13px', textDecoration: 'none', fontWeight: 500 }}>LinkedIn</a>
         </div>
       </footer>
 
