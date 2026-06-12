@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Bell, Settings, Search, Github, Globe, Phone, Mail, LogOut, ChevronDown, ExternalLink, Copy, CheckCheck, Linkedin } from 'lucide-react';
+import { Bell, Settings, Search, Github, Globe, Phone, Mail, LogOut, ChevronDown, ExternalLink, Copy, CheckCheck, Linkedin, CheckCircle2 } from 'lucide-react';
+import { useToast } from '@/app/ToastContext';
 
 export default function Header() {
   const [time, setTime] = useState('');
@@ -10,6 +11,14 @@ export default function Header() {
   const [copied, setCopied] = useState<string | null>(null);
   const profileRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
+  const { showToast } = useToast();
+  const [notifications, setNotifications] = useState([
+    { id: 1, text: 'Google responded to your application', time: '2m ago', color: '#10b981', read: false },
+    { id: 2, text: 'New job match: OpenAI ML Researcher', time: '15m ago', color: '#00d4ff', read: false },
+    { id: 3, text: 'Resume score improved to 94/100', time: '1h ago', color: '#a855f7', read: false },
+  ]);
+
+  const unreadCount = notifications.filter(n => !n.read).length;
 
   // Live clock
   useEffect(() => {
@@ -83,31 +92,58 @@ export default function Header() {
           style={{ width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '10px', color: notifOpen ? '#00d4ff' : '#8892b0', background: 'rgba(255,255,255,0.04)', border: `1px solid ${notifOpen ? 'rgba(0,212,255,0.3)' : 'rgba(255,255,255,0.08)'}`, cursor: 'pointer', position: 'relative', transition: 'all 0.2s ease' }}
         >
           <Bell size={16} />
-          <span style={{ position: 'absolute', top: '6px', right: '6px', width: '7px', height: '7px', background: '#ec4899', borderRadius: '50%', boxShadow: '0 0 6px #ec4899', border: '1px solid rgba(5,5,20,0.8)' }} />
+          {unreadCount > 0 && (
+            <span style={{ position: 'absolute', top: '6px', right: '6px', width: '7px', height: '7px', background: '#ec4899', borderRadius: '50%', boxShadow: '0 0 6px #ec4899', border: '1px solid rgba(5,5,20,0.8)' }} />
+          )}
         </button>
 
         {notifOpen && (
-          <div style={{ position: 'absolute', top: '44px', right: 0, width: '300px', background: 'rgba(10,10,30,0.97)', border: '1px solid rgba(124,58,237,0.3)', borderRadius: '14px', backdropFilter: 'blur(20px)', padding: '12px', boxShadow: '0 20px 60px rgba(0,0,0,0.6), 0 0 30px rgba(124,58,237,0.1)', zIndex: 100 }}>
-            <div style={{ fontSize: '11px', fontWeight: 600, color: '#4a5568', letterSpacing: '0.08em', marginBottom: '10px' }}>NOTIFICATIONS</div>
-            {[
-              { text: 'Google responded to your application', time: '2m ago', color: '#10b981' },
-              { text: 'New job match: OpenAI ML Researcher', time: '15m ago', color: '#00d4ff' },
-              { text: 'Resume score improved to 94/100', time: '1h ago', color: '#a855f7' },
-            ].map((n, i) => (
-              <div key={i} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', padding: '8px', borderRadius: '8px', marginBottom: '4px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer' }}>
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: n.color, boxShadow: `0 0 6px ${n.color}`, flexShrink: 0, marginTop: '5px', display: 'inline-block' }} />
-                <div>
-                  <div style={{ fontSize: '12px', color: '#c0c8d8' }}>{n.text}</div>
-                  <div style={{ fontSize: '10px', color: '#4a5568', marginTop: '2px' }}>{n.time}</div>
+          <div style={{ position: 'absolute', top: '44px', right: 0, width: '320px', background: 'rgba(10,10,30,0.97)', border: '1px solid rgba(124,58,237,0.3)', borderRadius: '14px', backdropFilter: 'blur(20px)', padding: '16px', boxShadow: '0 20px 60px rgba(0,0,0,0.6), 0 0 30px rgba(124,58,237,0.1)', zIndex: 100 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+              <div style={{ fontSize: '11px', fontWeight: 600, color: '#4a5568', letterSpacing: '0.08em' }}>NOTIFICATIONS ({unreadCount})</div>
+              {unreadCount > 0 && (
+                <button 
+                  onClick={() => { setNotifications(ns => ns.map(n => ({ ...n, read: true }))); showToast('All marked as read', 'success'); }}
+                  style={{ background: 'none', border: 'none', color: '#00d4ff', fontSize: '11px', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}
+                >
+                  <CheckCircle2 size={12} /> Mark all read
+                </button>
+              )}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '300px', overflowY: 'auto', paddingRight: '4px' }}>
+              {notifications.map((n) => (
+                <div key={n.id} 
+                  onClick={() => {
+                    setNotifications(ns => ns.map(x => x.id === n.id ? { ...x, read: true } : x));
+                    showToast(`Opening details for: ${n.text}`, 'info');
+                    setNotifOpen(false);
+                  }} 
+                  style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', padding: '10px 12px', borderRadius: '10px', background: n.read ? 'rgba(255,255,255,0.01)' : 'rgba(255,255,255,0.03)', border: `1px solid ${n.read ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.08)'}`, cursor: 'pointer', transition: 'all 0.2s', opacity: n.read ? 0.6 : 1 }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = n.read ? 'rgba(255,255,255,0.01)' : 'rgba(255,255,255,0.03)'; }}
+                >
+                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: n.color, boxShadow: `0 0 8px ${n.color}`, flexShrink: 0, marginTop: '5px', display: 'inline-block', opacity: n.read ? 0 : 1 }} />
+                  <div>
+                    <div style={{ fontSize: '12px', color: '#f0f0ff', fontWeight: n.read ? 500 : 600, lineHeight: 1.4 }}>{n.text}</div>
+                    <div style={{ fontSize: '10px', color: '#4a5568', marginTop: '4px' }}>{n.time}</div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
+            <button 
+              onClick={() => { showToast('Redirecting to full notifications log...', 'info'); setNotifOpen(false); }}
+              style={{ width: '100%', padding: '10px', marginTop: '12px', borderRadius: '8px', background: 'rgba(0,212,255,0.06)', border: '1px solid rgba(0,212,255,0.15)', color: '#00d4ff', fontSize: '12px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(0,212,255,0.1)'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(0,212,255,0.06)'; }}
+            >
+              View All Activity
+            </button>
           </div>
         )}
       </div>
 
       {/* Settings */}
-      <button style={{ width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '10px', color: '#8892b0', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', transition: 'all 0.2s ease' }}
+      <button onClick={() => showToast('Opening Settings panel...', 'info')} style={{ width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '10px', color: '#8892b0', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', transition: 'all 0.2s ease' }}
         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#a855f7'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(168,85,247,0.3)'; (e.currentTarget as HTMLElement).style.transform = 'rotate(30deg)'; }}
         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#8892b0'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.08)'; (e.currentTarget as HTMLElement).style.transform = 'rotate(0deg)'; }}>
         <Settings size={16} />
@@ -300,7 +336,9 @@ export default function Header() {
 
             {/* Footer actions */}
             <div style={{ padding: '10px 12px 12px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-              <button style={{
+              <button 
+                onClick={() => showToast('Signing out...', 'info')}
+                style={{
                 width: '100%', padding: '9px', borderRadius: '10px',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
                 background: 'rgba(239,68,68,0.07)',
