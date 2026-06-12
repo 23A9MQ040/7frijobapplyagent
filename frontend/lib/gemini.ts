@@ -16,7 +16,7 @@ export async function generateJobsFromGemini(apiKey: string, role: string, locat
   ]
   Do not wrap the JSON in markdown code blocks, return raw JSON string.`;
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey.trim()}`;
 
   const response = await fetch(url, {
     method: 'POST',
@@ -37,10 +37,15 @@ export async function generateJobsFromGemini(apiKey: string, role: string, locat
   }
 
   const data = await response.json();
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  let text = data.candidates?.[0]?.content?.parts?.[0]?.text;
   
   if (!text) {
     throw new Error('Invalid response structure from Gemini API.');
+  }
+
+  text = text.trim();
+  if (text.startsWith('```')) {
+    text = text.replace(/^```(json)?\n?/, '').replace(/\n?```$/, '');
   }
 
   try {
@@ -79,7 +84,7 @@ export async function analyzeResumeWithGemini(apiKey: string, resumeText: string
   }
   Do not wrap the JSON in markdown code blocks, return raw JSON string.`;
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey.trim()}`;
 
   const response = await fetch(url, {
     method: 'POST',
@@ -100,10 +105,15 @@ export async function analyzeResumeWithGemini(apiKey: string, resumeText: string
   }
 
   const data = await response.json();
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  let text = data.candidates?.[0]?.content?.parts?.[0]?.text;
   
   if (!text) {
     throw new Error('Invalid response structure from Gemini API.');
+  }
+
+  text = text.trim();
+  if (text.startsWith('```')) {
+    text = text.replace(/^```(json)?\n?/, '').replace(/\n?```$/, '');
   }
 
   try {
@@ -137,7 +147,7 @@ export async function generateOutreachMessage(apiKey: string, resumeText: string
   }
   Do not wrap the JSON in markdown code blocks, return raw JSON string.`;
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey.trim()}`;
 
   const response = await fetch(url, {
     method: 'POST',
@@ -158,10 +168,15 @@ export async function generateOutreachMessage(apiKey: string, resumeText: string
   }
 
   const data = await response.json();
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  let text = data.candidates?.[0]?.content?.parts?.[0]?.text;
   
   if (!text) {
     throw new Error('Invalid response structure from Gemini API.');
+  }
+
+  text = text.trim();
+  if (text.startsWith('```')) {
+    text = text.replace(/^```(json)?\n?/, '').replace(/\n?```$/, '');
   }
 
   try {

@@ -196,7 +196,7 @@ export default function LandingPage() {
       <footer style={{ padding: '60px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{ width: '30px', height: '30px', borderRadius: '8px', background: 'linear-gradient(135deg, #7c3aed, #00d4ff)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, fontSize: '12px' }}>7F</div>
-          <span style={{ fontSize: '14px', fontWeight: 700, color: '#8892b0' }}>© 2026 7FRI JobApplyAgent. All rights reserved.</span>
+          <span style={{ fontSize: '14px', fontWeight: 700, color: '#8892b0' }}>&copy; Copyright by potturi chitti raju. All rights reserved.</span>
         </div>
         <div style={{ display: 'flex', gap: '24px' }}>
           <a href="#" style={{ color: '#4a5568', fontSize: '13px', textDecoration: 'none', fontWeight: 500 }}>Privacy Policy</a>
