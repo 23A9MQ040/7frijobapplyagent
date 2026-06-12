@@ -1,9 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { TrendingUp, TrendingDown, BarChart3, Activity, Target, Zap, Calendar, Users } from 'lucide-react';
 import Header from '@/components/common/Header';
 import Sidebar from '@/components/common/Sidebar';
+import { useToast } from '../../ToastContext';
 
 const weeklyData = [12, 18, 8, 24, 19, 31, 27];
 const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -24,6 +25,9 @@ const metricsData = [
 ];
 
 export default function AnalyticsPage() {
+  const { showToast } = useToast();
+  const [activeRange, setActiveRange] = useState('7 days');
+
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#050510' }}>
       <Sidebar />
@@ -39,12 +43,12 @@ export default function AnalyticsPage() {
                 <p style={{ color: '#8892b0', fontSize: '14px' }}>Job search performance insights</p>
               </div>
               <div style={{ display: 'flex', gap: '6px' }}>
-                {['7 days', '30 days', '90 days'].map((r, i) => (
-                  <button key={r} style={{
+                {['7 days', '30 days', '90 days'].map((r) => (
+                  <button key={r} onClick={() => { setActiveRange(r); showToast(`Date range updated to ${r}`, 'success'); }} style={{
                     padding: '7px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: 500, cursor: 'pointer',
-                    background: i === 0 ? 'rgba(0,212,255,0.1)' : 'rgba(255,255,255,0.04)',
-                    border: `1px solid ${i === 0 ? 'rgba(0,212,255,0.3)' : 'rgba(255,255,255,0.08)'}`,
-                    color: i === 0 ? '#00d4ff' : '#8892b0', transition: 'all 0.2s',
+                    background: activeRange === r ? 'rgba(0,212,255,0.1)' : 'rgba(255,255,255,0.04)',
+                    border: `1px solid ${activeRange === r ? 'rgba(0,212,255,0.3)' : 'rgba(255,255,255,0.08)'}`,
+                    color: activeRange === r ? '#00d4ff' : '#8892b0', transition: 'all 0.2s',
                   }}>{r}</button>
                 ))}
               </div>

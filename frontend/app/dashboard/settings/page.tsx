@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { User, Bell, Shield, Zap, Globe, Key, Save, ToggleLeft, ToggleRight, ChevronRight } from 'lucide-react';
 import Header from '@/components/common/Header';
 import Sidebar from '@/components/common/Sidebar';
+import { useToast } from '../../ToastContext';
 
 const sections = ['Profile', 'Agent Config', 'Notifications', 'Security', 'Integrations'];
 
@@ -37,6 +38,7 @@ const SettingRow = ({ label, desc, children }: { label: string; desc?: string; c
 );
 
 export default function SettingsPage() {
+  const { showToast } = useToast();
   const [section, setSection] = useState('Profile');
   const [toggles, setToggles] = useState({
     autoApply: true, emailNotif: true, jobAlerts: true,
@@ -49,6 +51,7 @@ export default function SettingsPage() {
 
   const handleSave = () => {
     setSaved(true);
+    showToast('Settings saved successfully', 'success');
     setTimeout(() => setSaved(false), 2500);
   };
 
@@ -102,7 +105,7 @@ export default function SettingsPage() {
                       <div style={{ fontSize: '15px', fontWeight: 600, color: '#f0f0ff' }}>Sumanth</div>
                       <div style={{ fontSize: '12px', color: '#4a5568' }}>Pro Plan · Member since Jan 2024</div>
                     </div>
-                    <button style={{ padding: '7px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#8892b0' }}>Change Photo</button>
+                    <button onClick={() => showToast('Opening photo upload dialog...', 'info')} style={{ padding: '7px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#8892b0' }}>Change Photo</button>
                   </div>
                   {/* Fields */}
                   {[
@@ -174,7 +177,7 @@ export default function SettingsPage() {
                     {['Current Password', 'New Password', 'Confirm Password'].map(f => (
                       <input key={f} type="password" placeholder={f} style={{ display: 'block', width: '100%', padding: '10px 14px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px', color: '#f0f0ff', fontSize: '13px', outline: 'none', marginBottom: '10px' }} />
                     ))}
-                    <button style={{ padding: '9px 18px', borderRadius: '9px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', background: 'linear-gradient(135deg, rgba(239,68,68,0.15), rgba(239,68,68,0.08))', border: '1px solid rgba(239,68,68,0.25)', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <button onClick={() => showToast('Password updated successfully', 'success')} style={{ padding: '9px 18px', borderRadius: '9px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', background: 'linear-gradient(135deg, rgba(239,68,68,0.15), rgba(239,68,68,0.08))', border: '1px solid rgba(239,68,68,0.25)', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <Key size={13} /> Update Password
                     </button>
                   </div>
@@ -201,7 +204,7 @@ export default function SettingsPage() {
                           <div style={{ fontSize: '11px', color: integration.connected ? '#10b981' : '#4a5568' }}>{integration.status}</div>
                         </div>
                       </div>
-                      <button style={{ padding: '6px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', background: integration.connected ? 'rgba(239,68,68,0.08)' : 'rgba(0,212,255,0.08)', border: `1px solid ${integration.connected ? 'rgba(239,68,68,0.2)' : 'rgba(0,212,255,0.2)'}`, color: integration.connected ? '#ef4444' : '#00d4ff' }}>
+                      <button onClick={() => showToast(`${integration.connected ? 'Disconnected' : 'Connected'} ${integration.name} integration`, 'success')} style={{ padding: '6px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', background: integration.connected ? 'rgba(239,68,68,0.08)' : 'rgba(0,212,255,0.08)', border: `1px solid ${integration.connected ? 'rgba(239,68,68,0.2)' : 'rgba(0,212,255,0.2)'}`, color: integration.connected ? '#ef4444' : '#00d4ff' }}>
                         {integration.connected ? 'Disconnect' : 'Connect'}
                       </button>
                     </div>

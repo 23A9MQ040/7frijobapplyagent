@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import Header from '@/components/common/Header';
 import Sidebar from '@/components/common/Sidebar';
+import { useToast } from '../../ToastContext';
 
 const applications = [
   { id: 1, company: 'Google',    role: 'AI/ML Engineer',      status: 'interview', matchScore: 92, applied: 'Jun 10', nextStep: 'Technical Interview — Jun 15', logo: 'G', logoColor: 'linear-gradient(135deg,#4285f4,#0f9d58)', recruiter: 'Sarah M.' },
@@ -31,6 +32,7 @@ const pipelineCounts = {
 };
 
 export default function ApplicationsPage() {
+  const { showToast } = useToast();
   const [filter, setFilter] = useState('All');
   const [search, setSearch] = useState('');
 
@@ -100,6 +102,7 @@ export default function ApplicationsPage() {
               const s = statusConfig[app.status];
               return (
                 <div key={app.id}
+                  onClick={() => showToast(`Viewing details for ${app.company} application`, 'info')}
                   className={`animate-fade-up delay-${Math.min(i * 100, 400)}`}
                   style={{
                     background: 'rgba(10,10,30,0.6)', backdropFilter: 'blur(20px)',

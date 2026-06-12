@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Upload, FileText, Download, Zap, CheckCircle2, Star, TrendingUp, Eye, Edit3 } from 'lucide-react';
 import Header from '@/components/common/Header';
 import Sidebar from '@/components/common/Sidebar';
+import { useToast } from '../../ToastContext';
 
 const resumeScores = [
   { label: 'ATS Compatibility', score: 94, color: '#00d4ff' },
@@ -28,6 +29,7 @@ const priorityConfig: Record<string, { color: string; bg: string; border: string
 };
 
 export default function ResumePage() {
+  const { showToast } = useToast();
   const [dragging, setDragging] = useState(false);
 
   const overallScore = Math.round(resumeScores.reduce((a, s) => a + s.score, 0) / resumeScores.length);
@@ -77,7 +79,7 @@ export default function ResumePage() {
                   <div style={{ fontSize: '15px', fontWeight: 600, color: '#f0f0ff' }}>Drop your resume here</div>
                   <div style={{ fontSize: '12px', color: '#8892b0', marginTop: '4px' }}>PDF, DOCX up to 10MB</div>
                 </div>
-                <button style={{
+                <button onClick={() => showToast('Opening file browser...', 'info')} style={{
                   padding: '8px 20px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer',
                   background: 'linear-gradient(135deg, rgba(0,212,255,0.15), rgba(124,58,237,0.15))',
                   border: '1px solid rgba(0,212,255,0.25)', color: '#00d4ff',
@@ -109,7 +111,7 @@ export default function ResumePage() {
                     { icon: <Edit3 size={14} />, label: 'Edit', color: '#00d4ff', border: 'rgba(0,212,255,0.25)' },
                     { icon: <Download size={14} />, label: 'Download', color: '#10b981', border: 'rgba(16,185,129,0.25)' },
                   ].map(b => (
-                    <button key={b.label} style={{
+                    <button key={b.label} onClick={() => showToast(`Executing ${b.label} action`, 'success')} style={{
                       display: 'flex', alignItems: 'center', gap: '4px',
                       padding: '6px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: 600, cursor: 'pointer',
                       background: 'rgba(255,255,255,0.04)', border: `1px solid ${b.border}`, color: b.color,
@@ -132,7 +134,7 @@ export default function ResumePage() {
                     <div style={{ fontSize: '15px', fontWeight: 700, color: '#f0f0ff' }}>AI Suggestions</div>
                     <div style={{ fontSize: '11px', color: '#4a5568', marginTop: '2px' }}>{suggestions.filter(s => !s.done).length} improvements pending</div>
                   </div>
-                  <button style={{
+                  <button onClick={() => showToast('AI is auto-fixing your resume...', 'success')} style={{
                     display: 'flex', alignItems: 'center', gap: '5px',
                     padding: '7px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer',
                     background: 'linear-gradient(135deg, #00d4ff, #7c3aed)', border: 'none', color: '#fff',

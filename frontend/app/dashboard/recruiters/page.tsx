@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Users, Mail, Phone, Linkedin, Star, MessageSquare, Clock, Search, Plus, CheckCircle2 } from 'lucide-react';
 import Header from '@/components/common/Header';
 import Sidebar from '@/components/common/Sidebar';
+import { useToast } from '../../ToastContext';
 
 const recruiters = [
   { id: 1, name: 'Sarah Mitchell', company: 'Google', title: 'Senior Technical Recruiter', email: 'sarah.m@google.com', status: 'active', lastContact: '2 days ago', notes: 'Interested in ML roles. Follow up after interview.', rating: 5, logo: 'G', logoColor: 'linear-gradient(135deg,#4285f4,#0f9d58)' },
@@ -21,6 +22,7 @@ const statusConfig: Record<string, { label: string; color: string; bg: string; b
 };
 
 export default function RecruitersPage() {
+  const { showToast } = useToast();
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<number | null>(null);
 
@@ -45,7 +47,7 @@ export default function RecruitersPage() {
                   <span style={{ color: '#10b981', fontWeight: 600 }}>{recruiters.filter(r => r.status === 'active').length} active</span> contacts in your network
                 </p>
               </div>
-              <button style={{
+              <button onClick={() => showToast('Add Recruiter modal opening...', 'info')} style={{
                 display: 'flex', alignItems: 'center', gap: '6px',
                 padding: '9px 16px', borderRadius: '10px',
                 background: 'linear-gradient(135deg, rgba(0,212,255,0.15), rgba(124,58,237,0.15))',
@@ -106,10 +108,10 @@ export default function RecruitersPage() {
                     <span style={{ padding: '3px 10px', borderRadius: '9999px', fontSize: '10px', fontWeight: 600, background: s.bg, border: `1px solid ${s.border}`, color: s.color, flexShrink: 0 }}>{s.label}</span>
 
                     <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
-                      <button onClick={e => e.stopPropagation()} style={{ padding: '6px 10px', borderRadius: '7px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', background: 'rgba(0,212,255,0.08)', border: '1px solid rgba(0,212,255,0.2)', color: '#00d4ff', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <button onClick={e => { e.stopPropagation(); showToast(`Opening email draft for ${r.name}`, 'info'); }} style={{ padding: '6px 10px', borderRadius: '7px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', background: 'rgba(0,212,255,0.08)', border: '1px solid rgba(0,212,255,0.2)', color: '#00d4ff', display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <Mail size={11} /> Email
                       </button>
-                      <button onClick={e => e.stopPropagation()} style={{ padding: '6px 10px', borderRadius: '7px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.2)', color: '#a855f7', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <button onClick={e => { e.stopPropagation(); showToast(`Generating follow-up message for ${r.name}...`, 'success'); }} style={{ padding: '6px 10px', borderRadius: '7px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.2)', color: '#a855f7', display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <MessageSquare size={11} /> Follow Up
                       </button>
                     </div>
@@ -129,7 +131,7 @@ export default function RecruitersPage() {
                 </div>
                 <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
                   {[{ icon: <Mail size={13} />, label: 'Email', color: '#00d4ff' }, { icon: <Linkedin size={13} />, label: 'LinkedIn', color: '#a855f7' }, { icon: <Phone size={13} />, label: 'Call', color: '#10b981' }].map(b => (
-                    <button key={b.label} style={{ flex: 1, padding: '8px', borderRadius: '9px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: b.color, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', transition: 'all 0.2s' }}>
+                    <button key={b.label} onClick={() => showToast(`Executing ${b.label} action for ${detail.name}...`, 'success')} style={{ flex: 1, padding: '8px', borderRadius: '9px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: b.color, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', transition: 'all 0.2s' }}>
                       {b.icon} {b.label}
                     </button>
                   ))}

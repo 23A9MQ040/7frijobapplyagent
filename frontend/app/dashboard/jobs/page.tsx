@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import Header from '@/components/common/Header';
 import Sidebar from '@/components/common/Sidebar';
+import { useToast } from '../../ToastContext';
 
 const jobs = [
   { id: 1, title: 'Senior ML Engineer', company: 'DeepMind', location: 'London, UK (Remote)', salary: '$180k–$240k', type: 'Full-time', match: 97, posted: '1h ago', logo: 'D', logoColor: 'linear-gradient(135deg,#4285f4,#0f9d58)', tags: ['PyTorch','LLMs','Python'], hot: true },
@@ -20,6 +21,7 @@ const jobs = [
 const filters = ['All', 'Full-time', 'Contract', 'Remote', 'High Match'];
 
 export default function JobsPage() {
+  const { showToast } = useToast();
   const [search, setSearch] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
 
@@ -46,7 +48,7 @@ export default function JobsPage() {
                   AI found <span style={{ color: '#00d4ff', fontWeight: 600 }}>1,247 jobs</span> matching your profile today
                 </p>
               </div>
-              <button style={{
+              <button onClick={() => showToast('Applying to top 10 matches...', 'success')} style={{
                 display: 'flex', alignItems: 'center', gap: '6px',
                 padding: '10px 18px',
                 background: 'linear-gradient(135deg, #00d4ff, #7c3aed)',
@@ -170,7 +172,7 @@ export default function JobsPage() {
 
                 {/* Action buttons */}
                 <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
-                  <button style={{
+                  <button onClick={(e) => { e.stopPropagation(); showToast(`Applied to ${job.title} at ${job.company}`, 'success'); }} style={{
                     padding: '7px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer',
                     background: 'linear-gradient(135deg, rgba(0,212,255,0.15), rgba(124,58,237,0.15))',
                     border: '1px solid rgba(0,212,255,0.25)', color: '#00d4ff',
@@ -182,7 +184,7 @@ export default function JobsPage() {
                     <Zap size={12} style={{ display: 'inline', marginRight: '4px' }} />
                     Apply
                   </button>
-                  <button style={{
+                  <button onClick={(e) => { e.stopPropagation(); showToast(`Saved ${job.company} to favorites`, 'info'); }} style={{
                     width: '32px', height: '32px', borderRadius: '8px', cursor: 'pointer',
                     background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4a5568',
