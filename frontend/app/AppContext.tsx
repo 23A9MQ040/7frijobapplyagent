@@ -47,7 +47,7 @@ const defaultSettings: Settings = {
   aiOptimize: true,
   darkMode: true,
   remoteOnly: false,
-  geminiApiKey: '',
+  geminiApiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY || '',
   fullName: 'Sumanth',
   targetRole: 'ML / AI Engineer',
   location: 'Bangalore, India',
