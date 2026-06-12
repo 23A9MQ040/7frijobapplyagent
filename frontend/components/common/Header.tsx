@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Menu, LogOut, Settings, Bell } from 'lucide-react';
+import { Settings, Bell } from 'lucide-react';
 
 export default function Header() {
   return (

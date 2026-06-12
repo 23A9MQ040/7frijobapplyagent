@@ -6,7 +6,6 @@ import {
   Briefcase, 
   FileText, 
   MessageSquare,
-  AlertCircle,
   PlayCircle,
   PauseCircle
 } from 'lucide-react';
