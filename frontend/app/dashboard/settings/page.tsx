@@ -102,23 +102,27 @@ export default function SettingsPage() {
                   <div style={{ fontSize: '15px', fontWeight: 700, color: '#f0f0ff', marginBottom: '20px' }}>Profile Settings</div>
                   {/* Avatar */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px', padding: '16px', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                    <div style={{ width: '56px', height: '56px', borderRadius: '14px', background: 'linear-gradient(135deg, #7c3aed, #00d4ff)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', fontWeight: 800, color: '#fff', boxShadow: '0 0 20px rgba(124,58,237,0.4)' }}>S</div>
+                    <div style={{ width: '56px', height: '56px', borderRadius: '14px', background: 'linear-gradient(135deg, #7c3aed, #00d4ff)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', fontWeight: 800, color: '#fff', boxShadow: '0 0 20px rgba(124,58,237,0.4)' }}>
+                      {settings.fullName ? settings.fullName[0].toUpperCase() : 'S'}
+                    </div>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '15px', fontWeight: 600, color: '#f0f0ff' }}>Sumanth</div>
+                      <div style={{ fontSize: '15px', fontWeight: 600, color: '#f0f0ff' }}>{settings.fullName}</div>
                       <div style={{ fontSize: '12px', color: '#4a5568' }}>Pro Plan · Member since Jan 2024</div>
                     </div>
                     <button onClick={() => showToast('Opening photo upload dialog...', 'info')} style={{ padding: '7px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#8892b0' }}>Change Photo</button>
                   </div>
                   {/* Fields */}
                   {[
-                    { label: 'Full Name', value: 'Sumanth' },
-                    { label: 'Email', value: 'sumanth@email.com' },
-                    { label: 'Location', value: 'Bangalore, India' },
-                    { label: 'Target Role', value: 'ML / AI Engineer' },
+                    { label: 'Full Name', value: settings.fullName, key: 'fullName' as const },
+                    { label: 'Location', value: settings.location, key: 'location' as const },
+                    { label: 'Target Role', value: settings.targetRole, key: 'targetRole' as const },
                   ].map(f => (
                     <div key={f.label} style={{ marginBottom: '14px' }}>
                       <div style={{ fontSize: '11px', color: '#4a5568', letterSpacing: '0.06em', marginBottom: '6px' }}>{f.label.toUpperCase()}</div>
-                      <input defaultValue={f.value} style={{ width: '100%', padding: '10px 14px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px', color: '#f0f0ff', fontSize: '13px', outline: 'none', transition: 'border-color 0.2s ease' }}
+                      <input 
+                        value={f.value} 
+                        onChange={(e) => updateSetting(f.key, e.target.value)}
+                        style={{ width: '100%', padding: '10px 14px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px', color: '#f0f0ff', fontSize: '13px', outline: 'none', transition: 'border-color 0.2s ease' }}
                         onFocus={e => (e.target as HTMLInputElement).style.borderColor = 'rgba(0,212,255,0.35)'}
                         onBlur={e => (e.target as HTMLInputElement).style.borderColor = 'rgba(255,255,255,0.08)'}
                       />
@@ -130,6 +134,18 @@ export default function SettingsPage() {
               {section === 'Agent Config' && (
                 <>
                   <div style={{ fontSize: '15px', fontWeight: 700, color: '#f0f0ff', marginBottom: '20px' }}>Agent Configuration</div>
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ fontSize: '11px', color: '#4a5568', letterSpacing: '0.06em', marginBottom: '6px' }}>GEMINI API KEY (REQUIRED FOR AI JOB SEARCH)</div>
+                    <input 
+                      type="password"
+                      value={settings.geminiApiKey} 
+                      onChange={(e) => updateSetting('geminiApiKey', e.target.value)}
+                      placeholder="AIzaSy..."
+                      style={{ width: '100%', padding: '10px 14px', background: 'rgba(0,212,255,0.04)', border: '1px solid rgba(0,212,255,0.2)', borderRadius: '10px', color: '#00d4ff', fontSize: '13px', outline: 'none', transition: 'border-color 0.2s ease' }}
+                    />
+                    <div style={{ fontSize: '10px', color: '#ef4444', marginTop: '6px' }}>* Required to enable real-time job generation simulation on the Dashboard.</div>
+                  </div>
+
                   <SettingRow label="Auto-Apply Mode" desc="AI automatically submits applications to matched jobs">
                     <Toggle on={settings.autoApply} onToggle={() => toggle('autoApply')} />
                   </SettingRow>

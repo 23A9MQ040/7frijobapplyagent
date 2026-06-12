@@ -9,15 +9,16 @@ import {
 import Header from '@/components/common/Header';
 import Sidebar from '@/components/common/Sidebar';
 import { useToast } from '../../ToastContext';
+import { useAppContext } from '../../AppContext';
 
-const applications = [
-  { id: 1, company: 'Google',    role: 'AI/ML Engineer',      status: 'interview', matchScore: 92, applied: 'Jun 10', nextStep: 'Technical Interview — Jun 15', logo: 'G', logoColor: 'linear-gradient(135deg,#4285f4,#0f9d58)', recruiter: 'Sarah M.' },
-  { id: 2, company: 'OpenAI',    role: 'Prompt Engineer',      status: 'pending',   matchScore: 88, applied: 'Jun 8',  nextStep: 'Awaiting recruiter response',   logo: 'O', logoColor: 'linear-gradient(135deg,#10a37f,#1a7f64)', recruiter: '—' },
-  { id: 3, company: 'Anthropic', role: 'LLM Engineer',         status: 'applied',   matchScore: 85, applied: 'Jun 5',  nextStep: 'Application under review',      logo: 'A', logoColor: 'linear-gradient(135deg,#cc785c,#a85c3a)', recruiter: 'James K.' },
-  { id: 4, company: 'Meta',      role: 'GenAI Engineer',       status: 'rejected',  matchScore: 72, applied: 'May 28', nextStep: 'Closed',                        logo: 'M', logoColor: 'linear-gradient(135deg,#1877f2,#0d5dbf)', recruiter: '—' },
-  { id: 5, company: 'Microsoft', role: 'Azure AI Engineer',    status: 'offer',     matchScore: 95, applied: 'May 20', nextStep: '🎉 Offer: $210k — Respond by Jun 20', logo: 'Ms', logoColor: 'linear-gradient(135deg,#00a4ef,#7fba00)', recruiter: 'Priya R.' },
-  { id: 6, company: 'DeepMind',  role: 'Research Engineer',   status: 'interview', matchScore: 90, applied: 'Jun 11', nextStep: 'Phone Screen — Jun 14',         logo: 'D',  logoColor: 'linear-gradient(135deg,#4285f4,#0f9d58)', recruiter: 'Tom W.' },
-];
+const fallbackLogoColors: Record<string, string> = {
+  G: 'linear-gradient(135deg,#4285f4,#0f9d58)',
+  O: 'linear-gradient(135deg,#10a37f,#1a7f64)',
+  A: 'linear-gradient(135deg,#cc785c,#a85c3a)',
+  M: 'linear-gradient(135deg,#1877f2,#0d5dbf)',
+  Ms: 'linear-gradient(135deg,#00a4ef,#7fba00)',
+  D: 'linear-gradient(135deg,#4285f4,#0f9d58)',
+};
 
 const statusConfig: Record<string, { label: string; color: string; bg: string; border: string; icon: React.ReactNode }> = {
   interview: { label: 'Interview',  color: '#00d4ff', bg: 'rgba(0,212,255,0.1)',    border: 'rgba(0,212,255,0.25)',   icon: <MessageSquare size={11} /> },
@@ -27,12 +28,9 @@ const statusConfig: Record<string, { label: string; color: string; bg: string; b
   offer:     { label: 'Offer 🎉',   color: '#10b981', bg: 'rgba(16,185,129,0.1)',   border: 'rgba(16,185,129,0.25)', icon: <CheckCircle2 size={11} /> },
 };
 
-const pipelineCounts = {
-  applied: 2, pending: 1, interview: 2, offer: 1, rejected: 1,
-};
-
 export default function ApplicationsPage() {
   const { showToast } = useToast();
+  const { applications } = useAppContext();
   const [filter, setFilter] = useState('All');
   const [search, setSearch] = useState('');
 
@@ -40,6 +38,14 @@ export default function ApplicationsPage() {
     (filter === 'All' || a.status === filter.toLowerCase()) &&
     (a.company.toLowerCase().includes(search.toLowerCase()) || a.role.toLowerCase().includes(search.toLowerCase()))
   );
+
+  const pipelineCounts = {
+    applied: applications.filter(a => a.status === 'applied').length,
+    pending: applications.filter(a => a.status === 'pending').length,
+    interview: applications.filter(a => a.status === 'interview').length,
+    offer: applications.filter(a => a.status === 'offer').length,
+    rejected: applications.filter(a => a.status === 'rejected').length,
+  };
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#050510' }}>
@@ -54,7 +60,7 @@ export default function ApplicationsPage() {
               Applications
             </h1>
             <p style={{ color: '#8892b0', fontSize: '14px' }}>
-              Track all <span style={{ color: '#a855f7', fontWeight: 600 }}>89 applications</span> submitted by your AI agent
+              Track all <span style={{ color: '#a855f7', fontWeight: 600 }}>{applications.length} applications</span> submitted by your AI agent
             </p>
           </div>
 
@@ -98,8 +104,9 @@ export default function ApplicationsPage() {
 
           {/* Application Cards */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {shown.map((app, i) => {
-              const s = statusConfig[app.status];
+            {shown.map((app: any, i) => {
+              const s = statusConfig[app.status] || statusConfig['applied'];
+              const logoColor = fallbackLogoColors[app.logo] || 'linear-gradient(135deg,#7c3aed,#00d4ff)';
               return (
                 <div key={app.id}
                   onClick={() => showToast(`Viewing details for ${app.company} application`, 'info')}
@@ -123,7 +130,7 @@ export default function ApplicationsPage() {
                 >
                   <div style={{
                     width: '44px', height: '44px', borderRadius: '10px', flexShrink: 0,
-                    background: app.logoColor,
+                    background: logoColor,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: '14px', fontWeight: 800, color: '#fff',
                     boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
@@ -133,16 +140,13 @@ export default function ApplicationsPage() {
                     <div style={{ fontSize: '14px', fontWeight: 700, color: '#f0f0ff', marginBottom: '3px' }}>{app.role}</div>
                     <div style={{ fontSize: '12px', color: '#8892b0' }}>{app.company}</div>
                     <div style={{ fontSize: '11px', color: '#4a5568', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <Calendar size={10} /> Applied {app.applied}
+                      <Calendar size={10} /> Applied {app.date}
                     </div>
                   </div>
 
                   <div style={{ flex: 1, minWidth: '160px' }}>
-                    <div style={{ fontSize: '10px', color: '#4a5568', letterSpacing: '0.06em', marginBottom: '4px' }}>NEXT STEP</div>
-                    <div style={{ fontSize: '12px', color: app.status === 'offer' ? '#10b981' : '#c0c8d8' }}>{app.nextStep}</div>
-                    {app.recruiter !== '—' && (
-                      <div style={{ fontSize: '11px', color: '#4a5568', marginTop: '3px' }}>Recruiter: {app.recruiter}</div>
-                    )}
+                    <div style={{ fontSize: '10px', color: '#4a5568', letterSpacing: '0.06em', marginBottom: '4px' }}>AI MATCH REASON</div>
+                    <div style={{ fontSize: '12px', color: app.status === 'offer' ? '#10b981' : '#c0c8d8' }}>{app.matchReason || 'Application submitted successfully.'}</div>
                   </div>
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>

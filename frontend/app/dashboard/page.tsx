@@ -10,20 +10,13 @@ import Header from '@/components/common/Header';
 import Sidebar from '@/components/common/Sidebar';
 import { useToast } from '../ToastContext';
 import { useAppContext } from '../AppContext';
+import { generateJobsFromGemini } from '../../lib/gemini';
 
 const initialStats = [
   { label: 'Jobs Found', value: 1247, icon: Briefcase, trend: '+12.5%', color: '#00d4ff', glow: 'rgba(0,212,255,0.3)', bg: 'rgba(0,212,255,0.08)', border: 'rgba(0,212,255,0.2)' },
   { label: 'Applications', value: 89, icon: FileText, trend: '+24%', color: '#a855f7', glow: 'rgba(168,85,247,0.3)', bg: 'rgba(168,85,247,0.08)', border: 'rgba(168,85,247,0.2)' },
   { label: 'Recruiter Responses', value: 23, icon: MessageSquare, trend: '+8%', color: '#10b981', glow: 'rgba(16,185,129,0.3)', bg: 'rgba(16,185,129,0.08)', border: 'rgba(16,185,129,0.2)' },
   { label: 'Avg Match Score', value: 78, icon: Target, trend: '+5%', color: '#ec4899', glow: 'rgba(236,72,153,0.3)', bg: 'rgba(236,72,153,0.08)', border: 'rgba(236,72,153,0.2)', isPercent: true },
-];
-
-const recentApplications = [
-  { id: 1, company: 'Google',    role: 'AI/ML Engineer',    status: 'interview', matchScore: 92, date: '2 days ago',  logo: 'G' },
-  { id: 2, company: 'OpenAI',    role: 'Prompt Engineer',   status: 'pending',   matchScore: 88, date: '4 days ago',  logo: 'O' },
-  { id: 3, company: 'Anthropic', role: 'LLM Engineer',      status: 'applied',   matchScore: 85, date: '1 week ago',  logo: 'A' },
-  { id: 4, company: 'Meta',      role: 'GenAI Engineer',    status: 'rejected',  matchScore: 72, date: '2 weeks ago', logo: 'M' },
-  { id: 5, company: 'Microsoft', role: 'Azure AI Engineer', status: 'offer',     matchScore: 95, date: '3 weeks ago', logo: 'Ms' },
 ];
 
 const initialActivity = [
@@ -60,9 +53,10 @@ const companyColors: Record<string, string> = {
 
 export default function Dashboard() {
   const { showToast } = useToast();
-  const { settings, updateSetting } = useAppContext();
+  const { settings, updateSetting, applications, addApplication } = useAppContext();
   const [agentRunning, setAgentRunning] = useState(settings.autoApply);
   const [mounted, setMounted] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   // Sync with global settings
   useEffect(() => {
@@ -77,34 +71,58 @@ export default function Dashboard() {
     setMounted(true);
     if (!agentRunning) return;
 
-    const interval = setInterval(() => {
-      // 1. Update stats randomly
+    let isMounted = true;
+
+    const performAIAction = async () => {
+      if (settings.geminiApiKey && !isGenerating) {
+        setIsGenerating(true);
+        try {
+          const jobs = await generateJobsFromGemini(settings.geminiApiKey, settings.targetRole, settings.location);
+          if (isMounted) {
+            jobs.forEach((job: any) => addApplication(job));
+            showToast(`Gemini successfully found & applied to ${jobs.length} matching jobs!`, 'success');
+            
+            setActivity(prev => [
+              { action: `Gemini found ${jobs.length} high-match roles in ${settings.location}`, time: 'Just now', dot: '#10b981' },
+              ...prev.slice(0, 4)
+            ]);
+          }
+        } catch (e: any) {
+          if (isMounted) showToast(e.message || 'Gemini API call failed', 'error');
+        } finally {
+          if (isMounted) setIsGenerating(false);
+        }
+      } else {
+        // Fallback simulation if no API key
+        if (Math.random() > 0.6) {
+          setActivity(prev => {
+            const randomAction = SIMULATED_ACTIONS[Math.floor(Math.random() * SIMULATED_ACTIONS.length)];
+            const newAction = { ...randomAction, time: 'Just now' };
+            return [newAction, ...prev.slice(0, 4)];
+          });
+        }
+      }
+
+      // Randomly update stats
       setStats(prev => {
         const newStats = [...prev];
-        // Jobs Found (+1 to 3)
         newStats[0].value += Math.floor(Math.random() * 3) + 1;
-        // Applications (+0 to 1 occasionally)
         if (Math.random() > 0.7) newStats[1].value += 1;
-        // Match Score (fluctuate slightly)
         if (Math.random() > 0.5) {
           const shift = Math.random() > 0.5 ? 1 : -1;
           newStats[3].value = Math.min(100, Math.max(70, Number(newStats[3].value) + shift));
         }
         return newStats;
       });
+    };
 
-      // 2. Add random activity occasionally
-      if (Math.random() > 0.6) {
-        setActivity(prev => {
-          const randomAction = SIMULATED_ACTIONS[Math.floor(Math.random() * SIMULATED_ACTIONS.length)];
-          const newAction = { ...randomAction, time: 'Just now' };
-          return [newAction, ...prev.slice(0, 4)];
-        });
-      }
-    }, 3000);
+    const interval = setInterval(performAIAction, settings.geminiApiKey ? 15000 : 3000); // Slower if calling API
 
-    return () => clearInterval(interval);
-  }, [agentRunning]);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [agentRunning, settings.geminiApiKey, isGenerating]);
 
   const handlePauseToggle = () => {
     const newState = !agentRunning;
@@ -215,10 +233,10 @@ export default function Dashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {recentApplications.map((app) => {
-                      const s = statusConfig[app.status];
+                    {applications.slice(0, 5).map((app) => {
+                      const s = statusConfig[app.status] || statusConfig['applied'];
                       return (
-                        <tr key={app.id} onClick={() => showToast(`Opening details for ${app.company} application.`, 'info')} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', transition: 'background 0.2s ease', cursor: 'pointer' }} onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.02)'} onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
+                        <tr key={app.id} onClick={() => showToast(`Opening details for ${app.company} application. ${app.matchReason || ''}`, 'info')} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', transition: 'background 0.2s ease', cursor: 'pointer' }} onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.02)'} onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
                           <td style={{ padding: '12px 16px' }}><div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><div style={{ width: '30px', height: '30px', borderRadius: '8px', flexShrink: 0, background: companyColors[app.logo] || 'linear-gradient(135deg,#7c3aed,#00d4ff)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 700, color: '#fff' }}>{app.logo}</div><span style={{ fontSize: '13px', fontWeight: 600, color: '#f0f0ff' }}>{app.company}</span></div></td>
                           <td style={{ padding: '12px 16px', fontSize: '12px', color: '#8892b0' }}>{app.role}</td>
                           <td style={{ padding: '12px 16px' }}><div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><div style={{ width: '50px', height: '4px', background: 'rgba(255,255,255,0.08)', borderRadius: '9999px', overflow: 'hidden' }}><div style={{ width: `${app.matchScore}%`, height: '100%', background: 'linear-gradient(90deg, #00d4ff, #a855f7)', borderRadius: '9999px', boxShadow: '0 0 6px rgba(0,212,255,0.5)' }} /></div><span style={{ fontSize: '12px', fontWeight: 600, color: '#00d4ff' }}>{app.matchScore}%</span></div></td>
