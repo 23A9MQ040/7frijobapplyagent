@@ -6,27 +6,75 @@ import Header from '@/components/common/Header';
 import Sidebar from '@/components/common/Sidebar';
 import { useToast } from '../../ToastContext';
 
-const weeklyData = [12, 18, 8, 24, 19, 31, 27];
-const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-const maxVal = Math.max(...weeklyData);
-
-const topCompanies = [
-  { name: 'Google', applied: 8, responses: 3, rate: '37.5%', color: '#4285f4' },
-  { name: 'OpenAI', applied: 6, responses: 2, rate: '33.3%', color: '#10a37f' },
-  { name: 'Meta', applied: 7, responses: 1, rate: '14.3%', color: '#1877f2' },
-  { name: 'Microsoft', applied: 5, responses: 2, rate: '40.0%', color: '#00a4ef' },
-];
-
-const metricsData = [
-  { label: 'Total Applied', value: 89, change: '+24%', up: true, color: '#a855f7', icon: <Zap size={16} /> },
-  { label: 'Response Rate', value: '28%', change: '+6%', up: true, color: '#10b981', icon: <Activity size={16} /> },
-  { label: 'Interviews', value: 12, change: '+3', up: true, color: '#00d4ff', icon: <Users size={16} /> },
-  { label: 'Avg Match', value: '84%', change: '+5%', up: true, color: '#ec4899', icon: <Target size={16} /> },
-];
+import { useAppContext } from '../../AppContext';
 
 export default function AnalyticsPage() {
   const { showToast } = useToast();
-  const [activeRange, setActiveRange] = useState('7 days');
+  const { applications } = useAppContext();
+  const [activeRange, setActiveRange] = useState('14 days');
+
+  // Compute Metrics
+  const totalApplied = applications.length;
+  const interviewing = applications.filter(a => a.status === 'interview' || a.status === 'offer' || a.status === 'rejected').length; 
+  // Let's assume response rate is anyone not in 'applied' or 'rejected' (wait, rejected is a response)
+  const responded = applications.filter(a => a.status !== 'applied').length;
+  const responseRate = totalApplied > 0 ? Math.round((responded / totalApplied) * 100) : 0;
+  
+  const interviewsCount = applications.filter(a => a.status === 'interview').length;
+  const offersCount = applications.filter(a => a.status === 'offer').length;
+  
+  const avgMatch = totalApplied > 0 
+    ? Math.round(applications.reduce((acc, app) => acc + (app.matchScore || 0), 0) / totalApplied) 
+    : 0;
+
+  const metricsData = [
+    { label: 'Total Applied', value: totalApplied, change: '+12%', up: true, color: '#a855f7', icon: <Zap size={16} /> },
+    { label: 'Response Rate', value: `${responseRate}%`, change: '+5%', up: true, color: '#10b981', icon: <Activity size={16} /> },
+    { label: 'Interviews', value: interviewsCount, change: '+2', up: true, color: '#00d4ff', icon: <Users size={16} /> },
+    { label: 'Avg Match', value: `${avgMatch}%`, change: '+1%', up: true, color: '#ec4899', icon: <Target size={16} /> },
+  ];
+
+  // Compute Histogram (last 14 days)
+  const last14Days = Array.from({ length: 14 }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - (13 - i));
+    return d.toISOString().split('T')[0];
+  });
+  
+  const weeklyData = last14Days.map(dateStr => {
+    return applications.filter(a => a.date === dateStr).length;
+  });
+  
+  const days = last14Days.map(d => {
+    const dateObj = new Date(d);
+    return dateObj.toLocaleDateString('en-US', { weekday: 'short' });
+  });
+  
+  const maxVal = Math.max(...weeklyData, 5); // ensure at least 5 for scale
+
+  // Compute Top Companies by application count
+  const companyCounts: Record<string, number> = {};
+  applications.forEach(a => { companyCounts[a.company] = (companyCounts[a.company] || 0) + 1; });
+  const sortedCompanies = Object.entries(companyCounts).sort((a,b) => b[1] - a[1]).slice(0, 4);
+  const colors = ['#4285f4', '#10a37f', '#1877f2', '#00a4ef'];
+  
+  const topCompanies = sortedCompanies.map(([name, count], i) => {
+    const appsForComp = applications.filter(a => a.company === name);
+    const resCount = appsForComp.filter(a => a.status !== 'applied').length;
+    const rate = count > 0 ? Math.round((resCount/count)*100) : 0;
+    return { name, applied: count, responses: resCount, rate: `${rate}%`, color: colors[i] };
+  });
+
+  // Funnel
+  const funnelStages = [
+    { label: 'Applied', count: totalApplied, pct: 100, color: '#a855f7' },
+    { label: 'Responded', count: responded, pct: totalApplied ? Math.round((responded/totalApplied)*100) : 0, color: '#7c3aed' },
+    { label: 'Screened', count: interviewsCount + offersCount, pct: totalApplied ? Math.round(((interviewsCount + offersCount)/totalApplied)*100) : 0, color: '#00d4ff' },
+    { label: 'Interview', count: interviewsCount, pct: totalApplied ? Math.round((interviewsCount/totalApplied)*100) : 0, color: '#10b981' },
+    { label: 'Offer', count: offersCount, pct: totalApplied ? Math.round((offersCount/totalApplied)*100) : 0, color: '#f59e0b' },
+  ];
+
+
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#050510' }}>
@@ -43,7 +91,7 @@ export default function AnalyticsPage() {
                 <p style={{ color: '#8892b0', fontSize: '14px' }}>Job search performance insights</p>
               </div>
               <div style={{ display: 'flex', gap: '6px' }}>
-                {['7 days', '30 days', '90 days'].map((r) => (
+                {['14 days', '30 days', '90 days'].map((r) => (
                   <button key={r} onClick={() => { setActiveRange(r); showToast(`Date range updated to ${r}`, 'success'); }} style={{
                     padding: '7px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: 500, cursor: 'pointer',
                     background: activeRange === r ? 'rgba(0,212,255,0.1)' : 'rgba(255,255,255,0.04)',
@@ -92,7 +140,7 @@ export default function AnalyticsPage() {
               <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                   <div style={{ fontSize: '15px', fontWeight: 700, color: '#f0f0ff' }}>Daily Applications</div>
-                  <div style={{ fontSize: '11px', color: '#4a5568', marginTop: '2px' }}>This week · 139 total</div>
+                  <div style={{ fontSize: '11px', color: '#4a5568', marginTop: '2px' }}>Last 14 days · {totalApplied} total</div>
                 </div>
                 <BarChart3 size={16} style={{ color: '#4a5568' }} />
               </div>
@@ -155,13 +203,7 @@ export default function AnalyticsPage() {
             <div style={{ fontSize: '15px', fontWeight: 700, color: '#f0f0ff', marginBottom: '4px' }}>Application Funnel</div>
             <div style={{ fontSize: '11px', color: '#4a5568', marginBottom: '20px' }}>Conversion at each stage</div>
             <div style={{ display: 'flex', gap: '0', alignItems: 'center' }}>
-              {[
-                { label: 'Applied', count: 89, pct: 100, color: '#a855f7' },
-                { label: 'Viewed', count: 67, pct: 75, color: '#7c3aed' },
-                { label: 'Screened', count: 23, pct: 26, color: '#00d4ff' },
-                { label: 'Interview', count: 12, pct: 13, color: '#10b981' },
-                { label: 'Offer', count: 1, pct: 1, color: '#f59e0b' },
-              ].map((stage, i, arr) => (
+              {funnelStages.map((stage, i, arr) => (
                 <React.Fragment key={i}>
                   <div style={{ flex: 1, textAlign: 'center' }}>
                     <div style={{
