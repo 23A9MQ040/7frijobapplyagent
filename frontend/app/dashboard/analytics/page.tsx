@@ -96,22 +96,24 @@ export default function AnalyticsPage() {
                 </div>
                 <BarChart3 size={16} style={{ color: '#4a5568' }} />
               </div>
-              {/* Bar chart */}
-              <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', height: '140px' }}>
+              {/* Histogram */}
+              <div style={{ display: 'flex', alignItems: 'flex-end', gap: '0px', height: '140px', padding: '0 10px' }}>
                 {weeklyData.map((val, i) => (
-                  <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', height: '100%', justifyContent: 'flex-end' }}>
-                    <div style={{ fontSize: '10px', color: '#8892b0', fontWeight: 600 }}>{val}</div>
+                  <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', height: '100%', justifyContent: 'flex-end', position: 'relative' }}>
+                    <div style={{ fontSize: '10px', color: '#8892b0', fontWeight: 600, position: 'absolute', top: `calc(100% - ${(val / maxVal) * 100}% - 24px)` }}>{val}</div>
                     <div style={{
-                      width: '100%', borderRadius: '6px 6px 0 0',
+                      width: '100%',
                       height: `${(val / maxVal) * 100}%`,
                       background: i === weeklyData.length - 1
                         ? 'linear-gradient(180deg, #00d4ff, rgba(0,212,255,0.3))'
-                        : 'linear-gradient(180deg, rgba(124,58,237,0.6), rgba(124,58,237,0.2))',
-                      boxShadow: i === weeklyData.length - 1 ? '0 0 12px rgba(0,212,255,0.4)' : 'none',
+                        : 'linear-gradient(180deg, rgba(124,58,237,0.8), rgba(124,58,237,0.3))',
+                      borderTop: `2px solid ${i === weeklyData.length - 1 ? '#00d4ff' : '#a855f7'}`,
+                      borderRight: i < weeklyData.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
+                      boxShadow: i === weeklyData.length - 1 ? '0 0 15px rgba(0,212,255,0.4)' : 'none',
                       transition: 'height 0.5s ease',
                       minHeight: '8px',
                     }} />
-                    <div style={{ fontSize: '10px', color: '#4a5568' }}>{days[i]}</div>
+                    <div style={{ fontSize: '10px', color: '#4a5568', marginTop: '4px' }}>{days[i]}</div>
                   </div>
                 ))}
               </div>
